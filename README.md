@@ -1,11 +1,21 @@
-<div align="center">
+# SUNOO - Feel The Music
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+The next generation of music streaming. This application features:
+- A modern, dark-themed UI for music playback
+- Supabase integration for music and cover art storage
+- Real-time tracks and playlist handling
+- Custom creator dashboard
+- Firebase Authentication and Firestore Database
 
-  <h1>Built with AI Studio</h2>
+## Getting Started
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Start the dev server with `npm run dev`
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+## Technologies utilized
+- React
+- Vite
+- Tailwind CSS
+- Supabase
+- Firebase

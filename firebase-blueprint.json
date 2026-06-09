@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "Track": {
+      "title": "Track",
+      "description": "A musical track uploaded by a user",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "artist": { "type": "string" },
+        "coverUrl": { "type": "string" },
+        "duration": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "genre": { "type": "string" },
+        "plays": { "type": "number" },
+        "ownerId": { "type": "string" },
+        "visibility": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "artist", "ownerId", "visibility"]
+    }
+  },
+  "firestore": {
+    "tracks/{trackId}": {
+      "schema": { "$ref": "Track" },
+      "description": "Collection of all tracks"
+    }
+  }
+}

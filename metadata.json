@@ -1,0 +1,8 @@
+{
+  "name": "Remix: SUNOO",
+  "description": "Modern AI-powered music streaming platform with creator tools, inspired by premium services.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
