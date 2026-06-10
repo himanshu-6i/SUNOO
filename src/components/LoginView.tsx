@@ -12,14 +12,28 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [authError, setAuthError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate network delay
-    setTimeout(() => {
+    setAuthError('');
+    try {
+      const { auth } = await import('../firebase');
+      const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('firebase/auth');
+      
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
       onLogin();
-    }, 1500);
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      setAuthError(error.message || 'Failed to authenticate');
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -62,7 +76,15 @@ export function LoginView({ onLogin }: LoginViewProps) {
           <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-50" />
           
           <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-5">
-            <h2 className="text-2xl font-bold tracking-tight mb-2">Welcome Back</h2>
+            <h2 className="text-2xl font-bold tracking-tight mb-2">
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
+            </h2>
+            
+            {authError && (
+              <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm rounded-xl p-3">
+                {authError}
+              </div>
+            )}
             
             <div className="space-y-4">
               <div>
@@ -105,7 +127,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
                 <div className="w-5 h-5 border-2 border-black border-r-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  Sign In
+                  {isSignUp ? 'Sign Up' : 'Sign In'}
                   <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -153,7 +175,17 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
         <div className="text-center mt-8">
           <p className="text-zinc-500 text-sm">
-            Don't have an account? <button className="text-violet-400 hover:text-white transition-colors font-medium">Sign up</button>
+            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button 
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setAuthError('');
+              }}
+              className="text-violet-400 hover:text-white transition-colors font-medium"
+            >
+              {isSignUp ? 'Sign in' : 'Sign up'}
+            </button>
           </p>
         </div>
       </div>
