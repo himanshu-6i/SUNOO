@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, DragEvent } from 'react';
 import { Upload, BarChart3, Users, DollarSign, Music, CheckCircle2, X, Image as ImageIcon, Music4, Check, Play, FileAudio } from 'lucide-react';
 import { currentUser as mockUser, trendingTracks } from '../data';
-import { auth } from '../firebase';
 
 import { Track } from '../types';
 
@@ -38,7 +37,17 @@ interface CreatorDashboardProps {
 }
 
 export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashboardProps) {
-  const userName = auth.currentUser?.displayName || mockUser.name;
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    import('../supabase').then(({ getSupabase }) => {
+      getSupabase().auth.getSession().then(({ data }) => {
+        setUser(data.session?.user || null);
+      });
+    });
+  }, []);
+
+  const userName = user?.user_metadata?.full_name || mockUser.name;
   
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

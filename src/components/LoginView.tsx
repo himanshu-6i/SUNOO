@@ -20,14 +20,20 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsLoading(true);
     setAuthError('');
     try {
-      const { auth } = await import('../firebase');
-      const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('firebase/auth');
+      const { getSupabase } = await import('../supabase');
+      const supabase = getSupabase();
       
+      let error = null;
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const res = await supabase.auth.signUp({ email, password });
+        error = res.error;
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const res = await supabase.auth.signInWithPassword({ email, password });
+        error = res.error;
       }
+      
+      if (error) throw error;
+      
       onLogin();
     } catch (error: any) {
       console.error('Authentication error:', error);
@@ -39,22 +45,42 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
-      const { auth } = await import('../firebase');
-      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      onLogin();
+      const { getSupabase } = await import('../supabase');
+      const supabase = getSupabase();
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      
     } catch (error) {
       console.error('Error signing in with Google:', error);
       setIsGoogleLoading(false);
     }
   };
 
-  const handleGithubLogin = () => {
+  const handleGithubLogin = async () => {
     setIsGithubLoading(true);
-    setTimeout(() => {
-      onLogin();
-    }, 1500);
+    try {
+      const { getSupabase } = await import('../supabase');
+      const supabase = getSupabase();
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in with Github:', error);
+      setIsGithubLoading(false);
+    }
   };
 
   return (

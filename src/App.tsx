@@ -13,10 +13,10 @@ import { SettingsView } from './components/SettingsView';
 import { AddToPlaylistModal } from './components/AddToPlaylistModal';
 import { ViewState, Track, Notification, Playlist } from './types';
 import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser } from './data';
-import { auth, db } from './firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import type { Session } from '@supabase/supabase-js';
 
 export default function App() {
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState | string>('home');
   const [libraryTab, setLibraryTab] = useState<'liked' | 'playlists' | 'downloaded' | 'uploaded'>('liked');
@@ -78,16 +78,24 @@ export default function App() {
 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Check login on startup (mock persistence)
+  // Check login on startup
   useEffect(() => {
     let unsubscribe: () => void;
-    import('./firebase').then(({ auth }) => {
-      import('firebase/auth').then(({ onAuthStateChanged }) => {
-        unsubscribe = onAuthStateChanged(auth, (user) => {
-          setIsAuthenticated(!!user);
-          setIsAuthLoading(false);
-        });
+    import('./supabase').then(({ getSupabase }) => {
+      const supabase = getSupabase();
+      
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setIsAuthenticated(!!session);
+        setIsAuthLoading(false);
       });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        setIsAuthenticated(!!session);
+      });
+      
+      unsubscribe = () => subscription.unsubscribe();
     });
     return () => {
       if (unsubscribe) unsubscribe();
@@ -97,35 +105,48 @@ export default function App() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const q = query(collection(db, 'tracks'), where('visibility', '==', 'public'));
-    const unsubscribeTracks = onSnapshot(q, (snapshot) => {
-      const fbTracks: Track[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Track[];
+    let unsubscribe: () => void;
+    
+    import('./supabase').then(({ getSupabase }) => {
+      const supabase = getSupabase();
       
-      // Merge unique tracks, preferring firestore tracks
-      setAllTracks(prev => {
-        const prevWithoutFb = prev.filter(p => !p.id.startsWith('t_')); // Assuming firestore ids don't start with t_ if we generate them, wait actually firestore ids are random strings.
-        // Actually trending tracks have specific ids like "1", "2", "3".
-        const localOnly = prev.filter(p => !fbTracks.some(f => f.id === p.id) && !p.createdAt); 
-        return [...fbTracks, ...localOnly];
-      });
-    }, (error) => {
-      if (error.code === 'permission-denied') {
-        console.warn('Firestore permission denied, likely due to recent logout or rules propagating.');
-      } else {
-        console.error('Firestore Error: ', error);
-      }
+      const fetchTracks = async () => {
+        const { data, error } = await supabase.from('tracks').select('*').eq('visibility', 'public');
+        if (!error && data) {
+          const fetchedTracks = data.map(t => ({
+            ...t,
+            id: t.id
+          })) as Track[];
+          
+          setAllTracks(prev => {
+            const localOnly = prev.filter(p => !fetchedTracks.some(f => f.id === p.id) && !p.createdAt); 
+            return [...fetchedTracks, ...localOnly];
+          });
+        }
+      };
+
+      fetchTracks();
+
+      const channel = supabase.channel('public:tracks')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tracks' }, () => {
+          fetchTracks();
+        })
+        .subscribe();
+        
+      unsubscribe = () => {
+        supabase.removeChannel(channel);
+      };
     });
 
-    return () => unsubscribeTracks();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [isAuthenticated]);
 
   const handleLogout = async () => {
-    const { auth } = await import('./firebase');
-    const { signOut } = await import('firebase/auth');
-    await signOut(auth);
+    const { getSupabase } = await import('./supabase');
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
     setIsPlaying(false);
   };
@@ -220,34 +241,27 @@ export default function App() {
   }
 
   const handleTrackUpload = async (newTrack: Track, files?: { audio: File | null; cover: File | null }) => {
-    if (!auth.currentUser) return;
+    if (!session?.user) return;
     
     try {
-      const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
       const { getSupabase } = await import('./supabase');
       const supabase = getSupabase();
       
-      const trackRef = doc(collection(db, 'tracks'));
+      const trackId = crypto.randomUUID();
       
       let audioDownloadUrl = newTrack.audioUrl;
       let coverDownloadUrl = newTrack.coverUrl;
 
       if (files?.audio) {
         const fileExt = (files.audio.name.split('.').pop() || 'mp3').replace(/[^a-zA-Z0-9]/g, '');
-        const fileName = `${trackRef.id}-audio.${fileExt}`;
+        const fileName = `${trackId}-audio.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('tracks').upload(fileName, files.audio, {
           cacheControl: '3600',
           upsert: false
         });
         if (uploadError) {
           console.error("Audio Upload Supabase Error:", uploadError);
-          if (uploadError.message?.includes('Bucket not found')) {
-            throw new Error("Supabase Bucket 'tracks' not found. Please go to your Supabase Dashboard -> Storage -> Create a new public bucket named 'tracks'.");
-          }
-          if (uploadError.message?.includes('violates row-level security policy')) {
-            throw new Error("Supabase Row-Level Security (RLS) is blocking the upload. Go to Supabase Dashboard -> Storage -> Tracks Bucket -> Policies, and add a policy to allow insert/select for all users, or disable RLS for testing.");
-          }
-          throw new Error(uploadError.message || "Failed to upload audio to Supabase Storage. Is your bucket public and RLS disabled/configured for inserts?");
+          throw new Error(uploadError.message || "Failed to upload audio to Supabase Storage.");
         }
         const { data } = supabase.storage.from('tracks').getPublicUrl(fileName);
         audioDownloadUrl = data.publicUrl;
@@ -255,26 +269,20 @@ export default function App() {
       
       if (files?.cover) {
         const fileExt = (files.cover.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '');
-        const fileName = `${trackRef.id}-cover.${fileExt}`;
+        const fileName = `${trackId}-cover.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('tracks').upload(fileName, files.cover, {
           cacheControl: '3600',
           upsert: false
         });
         if (uploadError) {
           console.error("Cover Upload Supabase Error:", uploadError);
-          if (uploadError.message?.includes('Bucket not found')) {
-            throw new Error("Supabase Bucket 'tracks' not found. Please go to your Supabase Dashboard -> Storage -> Create a new public bucket named 'tracks'.");
-          }
-          if (uploadError.message?.includes('violates row-level security policy')) {
-            throw new Error("Supabase Row-Level Security (RLS) is blocking the upload. Go to Supabase Dashboard -> Storage -> Tracks Bucket -> Policies, and add a policy to allow insert/select for all users, or disable RLS for testing.");
-          }
-          throw new Error(uploadError.message || "Failed to upload cover to Supabase Storage. Is your bucket public and RLS disabled/configured for inserts?");
+          throw new Error(uploadError.message || "Failed to upload cover to Supabase Storage.");
         }
         const { data } = supabase.storage.from('tracks').getPublicUrl(fileName);
         coverDownloadUrl = data.publicUrl;
       }
       
-      const firestoreTrack = {
+      const dbTrack = {
         title: newTrack.title,
         artist: newTrack.artist,
         coverUrl: coverDownloadUrl || '',
@@ -282,15 +290,18 @@ export default function App() {
         audioUrl: audioDownloadUrl || '',
         genre: newTrack.genre,
         plays: 0,
-        ownerId: auth.currentUser.uid,
-        visibility: 'public',
-        createdAt: serverTimestamp()
+        ownerId: session.user.id,
+        visibility: 'public'
       };
       
-      await setDoc(trackRef, firestoreTrack);
+      const { data: insertedTrack, error: dbError } = await supabase.from('tracks').insert([dbTrack]).select().single();
       
-      // Update local state temporarily so UI is snappy, but it will sync via onSnapshot
-      const finalTrack = { ...newTrack, id: trackRef.id, audioUrl: firestoreTrack.audioUrl, coverUrl: firestoreTrack.coverUrl, ownerId: auth.currentUser.uid, visibility: 'public' as const };
+      if (dbError) {
+         console.error("Supabase insert error", dbError);
+         throw new Error(dbError.message || "Database insert failed");
+      }
+      
+      const finalTrack = { ...newTrack, id: insertedTrack.id, audioUrl: insertedTrack.audioUrl, coverUrl: insertedTrack.coverUrl, ownerId: session.user.id, visibility: 'public' as const };
       
       const nextTracks = [finalTrack, ...allTracks];
       setAllTracks(nextTracks);
@@ -392,7 +403,6 @@ export default function App() {
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      const { doc, deleteDoc } = await import('firebase/firestore');
       const { getSupabase } = await import('./supabase');
       const supabase = getSupabase();
       
@@ -402,7 +412,7 @@ export default function App() {
         await supabase.storage.from('tracks').remove(filePaths);
       }
 
-      await deleteDoc(doc(db, 'tracks', trackId));
+      await supabase.from('tracks').delete().eq('id', trackId);
       
       setAllTracks(prev => prev.filter(t => t.id !== trackId));
       
@@ -438,9 +448,9 @@ export default function App() {
         return <SearchView query={searchQuery} tracks={allTracks} onPlay={handlePlayTrack} onGenreSelect={handleSearchChange} />;
       case 'library': {
         const liked = allTracks.filter(t => likedTrackIds.has(t.id));
-        const currentUid = auth.currentUser?.uid;
-        const userName = auth.currentUser?.displayName || mockUser.name;
-        const isAdmin = auth.currentUser?.email === 'hm5080408@gmail.com';
+        const currentUid = session?.user?.id;
+        const userName = session?.user?.user_metadata?.full_name || mockUser.name;
+        const isAdmin = session?.user?.email === 'hm5080408@gmail.com';
         const uploaded = allTracks.filter(t => t.ownerId === currentUid || isAdmin || (currentUid ? false : t.artist === userName));
         return <LibraryView likedTracks={liked} playlists={userPlaylists} downloadedTracks={downloadedTracks} uploadedTracks={uploaded} onPlay={handlePlayTrack} onRemoveLike={toggleLike} onPlayPlaylist={(p) => handlePlayTrack(p.tracks[0], p.tracks)} defaultTab={libraryTab} onDeleteTrack={handleDeleteTrack} />;
       }

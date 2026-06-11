@@ -1,9 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { currentUser as mockUser } from '../data';
 import { Track } from '../types';
 import { BadgeCheck, LayoutDashboard, Upload, Heart, ListMusic, Download, Clock, History, Edit, Link as LinkIcon, Instagram, Twitter, Play } from 'lucide-react';
-import { auth } from '../firebase';
-import { updateProfile } from 'firebase/auth';
 
 interface ProfileViewProps {
   tracks: Track[];
@@ -15,9 +13,18 @@ interface ProfileViewProps {
 export function ProfileView({ tracks, recentlyPlayed, onNavigate, onPlay }: ProfileViewProps) {
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    import('../supabase').then(({ getSupabase }) => {
+      getSupabase().auth.getSession().then(({ data }) => {
+        setUser(data.session?.user || null);
+      });
+    });
+  }, []);
   
-  const userName = auth.currentUser?.displayName || mockUser.name;
-  const userPhoto = localPhotoUrl || auth.currentUser?.photoURL || mockUser.avatarUrl;
+  const userName = user?.user_metadata?.full_name || mockUser.name;
+  const userPhoto = localPhotoUrl || user?.user_metadata?.avatar_url || mockUser.avatarUrl;
   const userRole = mockUser.role;
 
   const uploadedTracks = tracks.filter(t => t.artist === userName).length;
@@ -26,16 +33,19 @@ export function ProfileView({ tracks, recentlyPlayed, onNavigate, onPlay }: Prof
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      if (auth.currentUser) {
-        updateProfile(auth.currentUser, { photoURL: url })
-          .then(() => setLocalPhotoUrl(url))
-          .catch(err => console.error(err));
-      } else {
-        setLocalPhotoUrl(url);
+      setLocalPhotoUrl(url); // optimistic
+
+      if (user) {
+        import('../supabase').then(async ({ getSupabase }) => {
+           const supabase = getSupabase();
+           await supabase.auth.updateUser({
+             data: { avatar_url: url }
+           });
+        });
       }
     }
   };
