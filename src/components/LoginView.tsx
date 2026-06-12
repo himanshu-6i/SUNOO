@@ -44,6 +44,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
+    setAuthError('');
     try {
       const { getSupabase } = await import('../supabase');
       const supabase = getSupabase();
@@ -57,14 +58,16 @@ export function LoginView({ onLogin }: LoginViewProps) {
       
       if (error) throw error;
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in with Google:', error);
+      setAuthError(error.message || 'Failed to sign in with Google');
       setIsGoogleLoading(false);
     }
   };
 
   const handleGithubLogin = async () => {
     setIsGithubLoading(true);
+    setAuthError('');
     try {
       const { getSupabase } = await import('../supabase');
       const supabase = getSupabase();
@@ -77,8 +80,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
       });
       
       if (error) throw error;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in with Github:', error);
+      setAuthError(error.message || 'Failed to sign in with Github');
       setIsGithubLoading(false);
     }
   };

@@ -77,25 +77,39 @@ export default function App() {
   }, [volume]);
 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
 
   // Check login on startup
   useEffect(() => {
     let unsubscribe: () => void;
     import('./supabase').then(({ getSupabase }) => {
-      const supabase = getSupabase();
-      
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setIsAuthenticated(!!session);
-        setIsAuthLoading(false);
-      });
+      try {
+        const supabase = getSupabase();
+        
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+          if (error) {
+            console.error("Auth session error:", error);
+          }
+          setSession(session);
+          setIsAuthenticated(!!session);
+          setIsAuthLoading(false);
+        });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-        setIsAuthenticated(!!session);
-      });
-      
-      unsubscribe = () => subscription.unsubscribe();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setSession(session);
+          setIsAuthenticated(!!session);
+        });
+        
+        unsubscribe = () => subscription.unsubscribe();
+      } catch (e: any) {
+        console.error(e);
+        setInitError(e.message);
+        setIsAuthLoading(false);
+      }
+    }).catch(e => {
+        console.error(e);
+        setInitError(e.message);
+        setIsAuthLoading(false);
     });
     return () => {
       if (unsubscribe) unsubscribe();
@@ -227,6 +241,20 @@ export default function App() {
   const handleMarkNotificationRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
+
+  if (initError) {
+    return (
+      <div className="h-screen w-full bg-black flex flex-col items-center justify-center p-6 text-center text-white">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 max-w-lg">
+          <h1 className="text-xl font-bold text-red-500 mb-4">Configuration Error</h1>
+          <p className="text-zinc-300 mb-6">{initError}</p>
+          <p className="text-sm text-zinc-500">
+            If you are deploying to Vercel, make sure you have added <code className="bg-black/50 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> and <code className="bg-black/50 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> in your Vercel Project Settings under Environment Variables.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthLoading) {
     return (
