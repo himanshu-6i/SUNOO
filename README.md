@@ -2,19 +2,16 @@
 
 The next generation of music streaming. This application features:
 - A modern, dark-themed UI for music playback
-- Supabase integration for authentication, database, music, and cover art storage
+- Firebase integration for authentication, database, music, and cover art storage
 - Real-time tracks and playlist handling
 - Custom creator dashboard
 
+
 ## Getting Started
 
-1. Set up a Supabase Project.
-2. In your Supabase SQL Editor, run the `supabase-schema.sql` file generated in the project.
-3. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in your environment variables.
-4. Go to Supabase Auth settings and enable Email/Password and Google/GitHub providers if you wish to use them.
+Firebase has been configured using the Firebase AI Skill so it runs out of the box when you start the project!
 
-## Vercel Deployment Instructions
+## Firebase Settings
 
-When deploying this app to Vercel, simply provide your Supabase variables for storage, database, and auth in the Vercel Settings:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+Authentication, Firestore, and Storage are fully integrated. 
+The applet config handles the initialization automatically via `firebase-applet-config.json`.

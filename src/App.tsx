@@ -13,10 +13,13 @@ import { SettingsView } from './components/SettingsView';
 import { AddToPlaylistModal } from './components/AddToPlaylistModal';
 import { ViewState, Track, Notification, Playlist } from './types';
 import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser } from './data';
-import type { Session } from '@supabase/supabase-js';
+import { auth, db, storage } from './firebase';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState | string>('home');
   const [libraryTab, setLibraryTab] = useState<'liked' | 'playlists' | 'downloaded' | 'uploaded'>('liked');
@@ -82,35 +85,17 @@ export default function App() {
   // Check login on startup
   useEffect(() => {
     let unsubscribe: () => void;
-    import('./supabase').then(({ getSupabase }) => {
-      try {
-        const supabase = getSupabase();
-        
-        supabase.auth.getSession().then(({ data: { session }, error }) => {
-          if (error) {
-            console.error("Auth session error:", error);
-          }
-          setSession(session);
-          setIsAuthenticated(!!session);
-          setIsAuthLoading(false);
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          setSession(session);
-          setIsAuthenticated(!!session);
-        });
-        
-        unsubscribe = () => subscription.unsubscribe();
-      } catch (e: any) {
-        console.error(e);
-        setInitError(e.message);
+    try {
+      unsubscribe = onAuthStateChanged(auth, (user) => {
+        setSessionUser(user);
+        setIsAuthenticated(!!user);
         setIsAuthLoading(false);
-      }
-    }).catch(e => {
-        console.error(e);
-        setInitError(e.message);
-        setIsAuthLoading(false);
-    });
+      });
+    } catch (e: any) {
+      console.error(e);
+      setInitError(e.message);
+      setIsAuthLoading(false);
+    }
     return () => {
       if (unsubscribe) unsubscribe();
     };
@@ -121,36 +106,44 @@ export default function App() {
 
     let unsubscribe: () => void;
     
-    import('./supabase').then(({ getSupabase }) => {
-      const supabase = getSupabase();
-      
-      const fetchTracks = async () => {
-        const { data, error } = await supabase.from('tracks').select('*').eq('visibility', 'public');
-        if (!error && data) {
-          const fetchedTracks = data.map(t => ({
-            ...t,
-            id: t.id
+    const fetchTracks = async () => {
+      try {
+        const tracksRef = collection(db, 'tracks');
+        const q = query(tracksRef, where('visibility', '==', 'public'));
+        
+        const fetchInitial = async () => {
+          const snapshot = await getDocs(q);
+          const fetchedTracks = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
           })) as Track[];
           
           setAllTracks(prev => {
             const localOnly = prev.filter(p => !fetchedTracks.some(f => f.id === p.id) && !p.createdAt); 
             return [...fetchedTracks, ...localOnly];
           });
-        }
-      };
+        };
+        fetchInitial();
 
-      fetchTracks();
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          const fetchedTracks = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+          })) as Track[];
+          
+          setAllTracks(prev => {
+            const localOnly = prev.filter(p => !fetchedTracks.some(f => f.id === p.id) && !p.createdAt); 
+            return [...fetchedTracks, ...localOnly];
+          });
+        }, (error) => {
+          console.error("Firestore onSnapshot error", error);
+        });
+      } catch (err) {
+        console.error("Failed to fetch tracks", err);
+      }
+    };
 
-      const channel = supabase.channel('public:tracks')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'tracks' }, () => {
-          fetchTracks();
-        })
-        .subscribe();
-        
-      unsubscribe = () => {
-        supabase.removeChannel(channel);
-      };
-    });
+    fetchTracks();
 
     return () => {
       if (unsubscribe) unsubscribe();
@@ -158,9 +151,7 @@ export default function App() {
   }, [isAuthenticated]);
 
   const handleLogout = async () => {
-    const { getSupabase } = await import('./supabase');
-    const supabase = getSupabase();
-    await supabase.auth.signOut();
+    await signOut(auth);
     setIsAuthenticated(false);
     setIsPlaying(false);
   };
@@ -249,7 +240,7 @@ export default function App() {
           <h1 className="text-xl font-bold text-red-500 mb-4">Configuration Error</h1>
           <p className="text-zinc-300 mb-6">{initError}</p>
           <p className="text-sm text-zinc-500">
-            If you are deploying to Vercel, make sure you have added <code className="bg-black/50 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> and <code className="bg-black/50 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> in your Vercel Project Settings under Environment Variables.
+            It looks like Firebase might not be configured properly. Please use the set_up_firebase tool.
           </p>
         </div>
       </div>
@@ -269,12 +260,9 @@ export default function App() {
   }
 
   const handleTrackUpload = async (newTrack: Track, files?: { audio: File | null; cover: File | null }) => {
-    if (!session?.user) return;
+    if (!sessionUser) return;
     
     try {
-      const { getSupabase } = await import('./supabase');
-      const supabase = getSupabase();
-      
       const trackId = crypto.randomUUID();
       
       let audioDownloadUrl = newTrack.audioUrl;
@@ -283,31 +271,17 @@ export default function App() {
       if (files?.audio) {
         const fileExt = (files.audio.name.split('.').pop() || 'mp3').replace(/[^a-zA-Z0-9]/g, '');
         const fileName = `${trackId}-audio.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('tracks').upload(fileName, files.audio, {
-          cacheControl: '3600',
-          upsert: false
-        });
-        if (uploadError) {
-          console.error("Audio Upload Supabase Error:", uploadError);
-          throw new Error(uploadError.message || "Failed to upload audio to Supabase Storage.");
-        }
-        const { data } = supabase.storage.from('tracks').getPublicUrl(fileName);
-        audioDownloadUrl = data.publicUrl;
+        const audioRef = ref(storage, `tracks/${fileName}`);
+        await uploadBytes(audioRef, files.audio);
+        audioDownloadUrl = await getDownloadURL(audioRef);
       }
       
       if (files?.cover) {
         const fileExt = (files.cover.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '');
         const fileName = `${trackId}-cover.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('tracks').upload(fileName, files.cover, {
-          cacheControl: '3600',
-          upsert: false
-        });
-        if (uploadError) {
-          console.error("Cover Upload Supabase Error:", uploadError);
-          throw new Error(uploadError.message || "Failed to upload cover to Supabase Storage.");
-        }
-        const { data } = supabase.storage.from('tracks').getPublicUrl(fileName);
-        coverDownloadUrl = data.publicUrl;
+        const coverRef = ref(storage, `tracks/${fileName}`);
+        await uploadBytes(coverRef, files.cover);
+        coverDownloadUrl = await getDownloadURL(coverRef);
       }
       
       const dbTrack = {
@@ -318,18 +292,14 @@ export default function App() {
         audioUrl: audioDownloadUrl || '',
         genre: newTrack.genre,
         plays: 0,
-        ownerId: session.user.id,
-        visibility: 'public'
+        ownerId: sessionUser.uid,
+        visibility: 'public',
+        createdAt: new Date().toISOString()
       };
       
-      const { data: insertedTrack, error: dbError } = await supabase.from('tracks').insert([dbTrack]).select().single();
+      await setDoc(doc(db, 'tracks', trackId), dbTrack);
       
-      if (dbError) {
-         console.error("Supabase insert error", dbError);
-         throw new Error(dbError.message || "Database insert failed");
-      }
-      
-      const finalTrack = { ...newTrack, id: insertedTrack.id, audioUrl: insertedTrack.audioUrl, coverUrl: insertedTrack.coverUrl, ownerId: session.user.id, visibility: 'public' as const };
+      const finalTrack = { ...newTrack, id: trackId, audioUrl: audioDownloadUrl || '', coverUrl: coverDownloadUrl || '', ownerId: sessionUser.uid, visibility: 'public' as const };
       
       const nextTracks = [finalTrack, ...allTracks];
       setAllTracks(nextTracks);
@@ -431,16 +401,14 @@ export default function App() {
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      const { getSupabase } = await import('./supabase');
-      const supabase = getSupabase();
-      
-      const { data: files } = await supabase.storage.from('tracks').list('', { search: trackId });
-      if (files && files.length > 0) {
-        const filePaths = files.map(f => f.name);
-        await supabase.storage.from('tracks').remove(filePaths);
+      const audioListRef = ref(storage, 'tracks');
+      const allFiles = await listAll(audioListRef);
+      const filesToDelete = allFiles.items.filter(item => item.name.includes(trackId));
+      for (const file of filesToDelete) {
+        await deleteObject(file);
       }
 
-      await supabase.from('tracks').delete().eq('id', trackId);
+      await deleteDoc(doc(db, 'tracks', trackId));
       
       setAllTracks(prev => prev.filter(t => t.id !== trackId));
       
@@ -476,9 +444,9 @@ export default function App() {
         return <SearchView query={searchQuery} tracks={allTracks} onPlay={handlePlayTrack} onGenreSelect={handleSearchChange} />;
       case 'library': {
         const liked = allTracks.filter(t => likedTrackIds.has(t.id));
-        const currentUid = session?.user?.id;
-        const userName = session?.user?.user_metadata?.full_name || mockUser.name;
-        const isAdmin = session?.user?.email === 'hm5080408@gmail.com';
+        const currentUid = sessionUser?.uid;
+        const userName = sessionUser?.displayName || mockUser.name;
+        const isAdmin = sessionUser?.email === 'hm5080408@gmail.com';
         const uploaded = allTracks.filter(t => t.ownerId === currentUid || isAdmin || (currentUid ? false : t.artist === userName));
         return <LibraryView likedTracks={liked} playlists={userPlaylists} downloadedTracks={downloadedTracks} uploadedTracks={uploaded} onPlay={handlePlayTrack} onRemoveLike={toggleLike} onPlayPlaylist={(p) => handlePlayTrack(p.tracks[0], p.tracks)} defaultTab={libraryTab} onDeleteTrack={handleDeleteTrack} />;
       }

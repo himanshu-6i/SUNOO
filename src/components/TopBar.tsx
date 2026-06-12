@@ -24,9 +24,9 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    import('../supabase').then(({ getSupabase }) => {
-      getSupabase().auth.getSession().then(({ data }) => {
-        setUser(data.session?.user || null);
+    import('../firebase').then(({ auth }) => {
+      auth.onAuthStateChanged((u) => {
+        setUser(u);
       });
     });
   }, []);
@@ -142,13 +142,13 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="w-8 h-8 rounded-full bg-white/10 overflow-hidden border border-white/10 hover:border-white/30 transition-colors focus:outline-none"
           >
-            <img src={user?.user_metadata?.avatar_url || mockUser.avatarUrl} alt={user?.user_metadata?.full_name || mockUser.name} className="w-full h-full object-cover" />
+            <img src={user?.photoURL || mockUser.avatarUrl} alt={user?.displayName || mockUser.name} className="w-full h-full object-cover" />
           </button>
 
           {showProfileMenu && (
             <div className="absolute right-0 mt-4 w-48 bg-[#1e1e24] border border-white/10 rounded-xl shadow-2xl py-1 z-50 animate-in fade-in slide-in-from-top-2">
                <div className="px-4 py-2 border-b border-white/5">
-                 <p className="text-sm font-semibold text-white truncate">{user?.user_metadata?.full_name || mockUser.name}</p>
+                 <p className="text-sm font-semibold text-white truncate">{user?.displayName || mockUser.name}</p>
                  <p className="text-xs text-zinc-500 capitalize">{mockUser.role} Account</p>
                </div>
                <button onClick={() => onNavigate('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors">Profile</button>

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { auth } from '../firebase';
+import { updateProfile } from 'firebase/auth';
 import { currentUser as mockUser } from '../data';
 import { Track } from '../types';
 import { BadgeCheck, LayoutDashboard, Upload, Heart, ListMusic, Download, Clock, History, Edit, Link as LinkIcon, Instagram, Twitter, Play } from 'lucide-react';
@@ -16,15 +18,18 @@ export function ProfileView({ tracks, recentlyPlayed, onNavigate, onPlay }: Prof
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    import('../supabase').then(({ getSupabase }) => {
-      getSupabase().auth.getSession().then(({ data }) => {
-        setUser(data.session?.user || null);
+    const fetchUser = async () => {
+      import('../firebase').then(({ auth }) => {
+        auth.onAuthStateChanged((u) => {
+          setUser(u);
+        });
       });
-    });
+    };
+    fetchUser();
   }, []);
   
-  const userName = user?.user_metadata?.full_name || mockUser.name;
-  const userPhoto = localPhotoUrl || user?.user_metadata?.avatar_url || mockUser.avatarUrl;
+  const userName = user?.displayName || mockUser.name;
+  const userPhoto = localPhotoUrl || user?.photoURL || mockUser.avatarUrl;
   const userRole = mockUser.role;
 
   const uploadedTracks = tracks.filter(t => t.artist === userName).length;
@@ -40,12 +45,13 @@ export function ProfileView({ tracks, recentlyPlayed, onNavigate, onPlay }: Prof
       setLocalPhotoUrl(url); // optimistic
 
       if (user) {
-        import('../supabase').then(async ({ getSupabase }) => {
-           const supabase = getSupabase();
-           await supabase.auth.updateUser({
-             data: { avatar_url: url }
-           });
-        });
+        try {
+          await updateProfile(user, {
+            photoURL: url
+          });
+        } catch (error) {
+          console.error("Failed to update profile", error);
+        }
       }
     }
   };

@@ -40,14 +40,14 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    import('../supabase').then(({ getSupabase }) => {
-      getSupabase().auth.getSession().then(({ data }) => {
-        setUser(data.session?.user || null);
+    import('../firebase').then(({ auth }) => {
+      auth.onAuthStateChanged((u) => {
+        setUser(u);
       });
     });
   }, []);
-
-  const userName = user?.user_metadata?.full_name || mockUser.name;
+  
+  const userName = user?.displayName || mockUser.name;
   
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

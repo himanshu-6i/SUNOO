@@ -1,6 +1,8 @@
 import { Music, ArrowRight, Github, Lock, Mail } from 'lucide-react';
 import React, { useState } from 'react';
 import { SunooLogo } from './SunooLogo';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -20,24 +22,16 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsLoading(true);
     setAuthError('');
     try {
-      const { getSupabase } = await import('../supabase');
-      const supabase = getSupabase();
-      
-      let error = null;
       if (isSignUp) {
-        const res = await supabase.auth.signUp({ email, password });
-        error = res.error;
+        await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        const res = await supabase.auth.signInWithPassword({ email, password });
-        error = res.error;
+        await signInWithEmailAndPassword(auth, email, password);
       }
-      
-      if (error) throw error;
-      
       onLogin();
     } catch (error: any) {
       console.error('Authentication error:', error);
       setAuthError(error.message || 'Failed to authenticate');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -46,18 +40,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsGoogleLoading(true);
     setAuthError('');
     try {
-      const { getSupabase } = await import('../supabase');
-      const supabase = getSupabase();
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      
-      if (error) throw error;
-      
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      // Let the onAuthStateChanged in App.tsx handle navigation
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
       setAuthError(error.message || 'Failed to sign in with Google');
@@ -69,17 +54,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsGithubLoading(true);
     setAuthError('');
     try {
-      const { getSupabase } = await import('../supabase');
-      const supabase = getSupabase();
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      
-      if (error) throw error;
+      const provider = new GithubAuthProvider();
+      await signInWithPopup(auth, provider);
+      // Let the onAuthStateChanged in App.tsx handle navigation
     } catch (error: any) {
       console.error('Error signing in with Github:', error);
       setAuthError(error.message || 'Failed to sign in with Github');
