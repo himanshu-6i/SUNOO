@@ -17,7 +17,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState<'email' | 'google' | false>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +33,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
     } catch (error: any) {
       console.error('Authentication error:', error);
       if (error.code === 'auth/operation-not-allowed') {
-        setShowConfigModal(true);
+        setShowConfigModal('email');
       } else {
         setAuthError(error.message || 'Failed to authenticate');
       }
@@ -51,7 +51,11 @@ export function LoginView({ onLogin }: LoginViewProps) {
       // Let the onAuthStateChanged in App.tsx handle navigation
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
-      setAuthError(error.message || 'Failed to sign in with Google');
+      if (error.code === 'auth/operation-not-allowed') {
+        setShowConfigModal('google');
+      } else {
+        setAuthError(error.message || 'Failed to sign in with Google');
+      }
       setIsGoogleLoading(false);
     }
   };
@@ -200,9 +204,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
       {showConfigModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-[#18181b] border border-white/10 p-8 rounded-3xl max-w-lg w-full shadow-2xl relative shadow-violet-500/10">
-            <h3 className="text-2xl font-bold text-white mb-2">Configure Firebase</h3>
+            <h3 className="text-2xl font-bold text-white mb-2">Configure Firebase Authentication</h3>
             <p className="text-zinc-400 mb-6 font-medium text-sm">
-              Your Firebase project does not have Email/Password authentication enabled. To fix this login error:
+              Your Firebase project does not have {showConfigModal === 'email' ? 'Email/Password' : 'Google'} authentication enabled. To fix this login error:
             </p>
             
             <ol className="space-y-4 mb-8 text-sm text-zinc-300">
@@ -216,7 +220,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
               </li>
               <li className="flex gap-4">
                 <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">3</span>
-                <span>Click <strong>Add new provider</strong>, select <strong>Email/Password</strong>, and toggle the "Enable" switch. Then click <strong>Save</strong>.</span>
+                <span>Click <strong>Add new provider</strong>, select <strong>{showConfigModal === 'email' ? 'Email/Password' : 'Google'}</strong>, and toggle the "Enable" switch. Then click <strong>Save</strong>.</span>
               </li>
               <li className="flex gap-4">
                 <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
