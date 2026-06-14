@@ -192,7 +192,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
         setIsUploading(false);
         const errMsg = err.message || '';
         if (errMsg.includes('storage/retry-limit-exceeded') || errMsg.includes('storage/unauthorized')) {
-           setUploadError('Firebase Storage error. Please ensure you have enabled Firebase Storage in your Firebase Console and the security rules allow uploads.');
+           setUploadError('Upload failed. Check console for details.');
         } else {
            setUploadError(errMsg || 'Failed to publish track.');
         }

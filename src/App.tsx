@@ -268,20 +268,24 @@ export default function App() {
       let audioDownloadUrl = newTrack.audioUrl;
       let coverDownloadUrl = newTrack.coverUrl;
 
-      if (files?.audio) {
-        const fileExt = (files.audio.name.split('.').pop() || 'mp3').replace(/[^a-zA-Z0-9]/g, '');
-        const fileName = `${trackId}-audio.${fileExt}`;
-        const audioRef = ref(storage, `tracks/${fileName}`);
-        await uploadBytes(audioRef, files.audio);
-        audioDownloadUrl = await getDownloadURL(audioRef);
-      }
-      
-      if (files?.cover) {
-        const fileExt = (files.cover.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '');
-        const fileName = `${trackId}-cover.${fileExt}`;
-        const coverRef = ref(storage, `tracks/${fileName}`);
-        await uploadBytes(coverRef, files.cover);
-        coverDownloadUrl = await getDownloadURL(coverRef);
+      if (files?.audio || files?.cover) {
+        const formData = new FormData();
+        if (files.audio) formData.append('audio', files.audio);
+        if (files.cover) formData.append('cover', files.cover);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+           const err = await response.json();
+           throw new Error(err.error || 'Failed to upload files to server');
+        }
+
+        const data = await response.json();
+        if (data.audioUrl) audioDownloadUrl = data.audioUrl;
+        if (data.coverUrl) coverDownloadUrl = data.coverUrl;
       }
       
       const dbTrack = {
@@ -401,13 +405,6 @@ export default function App() {
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      const audioListRef = ref(storage, 'tracks');
-      const allFiles = await listAll(audioListRef);
-      const filesToDelete = allFiles.items.filter(item => item.name.includes(trackId));
-      for (const file of filesToDelete) {
-        await deleteObject(file);
-      }
-
       await deleteDoc(doc(db, 'tracks', trackId));
       
       setAllTracks(prev => prev.filter(t => t.id !== trackId));

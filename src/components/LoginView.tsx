@@ -17,6 +17,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState('');
 
+  const [showConfigModal, setShowConfigModal] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -30,7 +32,11 @@ export function LoginView({ onLogin }: LoginViewProps) {
       onLogin();
     } catch (error: any) {
       console.error('Authentication error:', error);
-      setAuthError(error.message || 'Failed to authenticate');
+      if (error.code === 'auth/operation-not-allowed') {
+        setShowConfigModal(true);
+      } else {
+        setAuthError(error.message || 'Failed to authenticate');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -151,32 +157,26 @@ export function LoginView({ onLogin }: LoginViewProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button 
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isGoogleLoading || isLoading || isGithubLoading}
-                className="flex justify-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
-              >
-                {isGoogleLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/50 border-r-transparent rounded-full animate-spin" />
-                ) : (
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-                )}
-              </button>
-              <button 
-                type="button"
-                onClick={handleGithubLogin}
-                disabled={isGithubLoading || isLoading || isGoogleLoading}
-                className="flex justify-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
-              >
-                {isGithubLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/50 border-r-transparent rounded-full animate-spin" />
-                ) : (
-                  <Github className="w-5 h-5 text-zinc-300" />
-                )}
-              </button>
-            </div>
+            <button 
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading || isLoading}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50 font-medium"
+            >
+              {isGoogleLoading ? (
+                <div className="w-5 h-5 border-2 border-white/50 border-r-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Sign in with Google
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -196,6 +196,44 @@ export function LoginView({ onLogin }: LoginViewProps) {
           </p>
         </div>
       </div>
+
+      {showConfigModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#18181b] border border-white/10 p-8 rounded-3xl max-w-lg w-full shadow-2xl relative shadow-violet-500/10">
+            <h3 className="text-2xl font-bold text-white mb-2">Configure Firebase</h3>
+            <p className="text-zinc-400 mb-6 font-medium text-sm">
+              Your Firebase project does not have Email/Password authentication enabled. To fix this login error:
+            </p>
+            
+            <ol className="space-y-4 mb-8 text-sm text-zinc-300">
+              <li className="flex gap-4">
+                <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">1</span>
+                <span>Go to your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-violet-400 font-medium hover:underline">Firebase Console</a> and open your project.</span>
+              </li>
+              <li className="flex gap-4">
+                <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">2</span>
+                <span>Click on <strong>Authentication</strong> in the left sidebar, then go to the <strong>Sign-in method</strong> tab.</span>
+              </li>
+              <li className="flex gap-4">
+                <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">3</span>
+                <span>Click <strong>Add new provider</strong>, select <strong>Email/Password</strong>, and toggle the "Enable" switch. Then click <strong>Save</strong>.</span>
+              </li>
+              <li className="flex gap-4">
+                <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
+                <span>Come back here and try logging in again!</span>
+              </li>
+            </ol>
+            
+            <button 
+              type="button"
+              onClick={() => setShowConfigModal(false)}
+              className="w-full bg-white text-black font-bold rounded-xl py-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              I've enabled it, let me try again
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
