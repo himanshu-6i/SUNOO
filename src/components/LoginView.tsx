@@ -233,7 +233,13 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   </li>
                   <li className="flex gap-4">
                     <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
-                    <span>Click <strong>Add domain</strong> and paste <code>{window.location.hostname}</code> and click Add.</span>
+                    <div>
+                      <span>Click <strong>Add domain</strong> and add both of these URLs one by one:</span>
+                      <ul className="list-disc pl-5 mt-2 space-y-1 font-mono text-xs text-violet-300">
+                        <li>ais-dev-ngtcsieoeiaowgff3kah6s-48977308293.asia-southeast1.run.app</li>
+                        <li>ais-pre-ngtcsieoeiaowgff3kah6s-48977308293.asia-southeast1.run.app</li>
+                      </ul>
+                    </div>
                   </li>
                 </ol>
               </>
