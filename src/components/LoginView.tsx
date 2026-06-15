@@ -17,7 +17,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [showConfigModal, setShowConfigModal] = useState<'email' | 'google' | 'api-key' | false>(false);
+  const [showConfigModal, setShowConfigModal] = useState<'email' | 'google' | 'api-key' | 'domain' | false>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +36,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
         setShowConfigModal('email');
       } else if (error.code === 'auth/api-key-not-valid') {
         setShowConfigModal('api-key');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setShowConfigModal('domain');
       } else {
         setAuthError(error.message || 'Failed to authenticate');
       }
@@ -57,6 +59,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
         setShowConfigModal('google');
       } else if (error.code === 'auth/api-key-not-valid') {
         setShowConfigModal('api-key');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setShowConfigModal('domain');
       } else {
         setAuthError(error.message || 'Failed to sign in with Google');
       }
@@ -208,7 +212,32 @@ export function LoginView({ onLogin }: LoginViewProps) {
       {showConfigModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-[#18181b] border border-white/10 p-8 rounded-3xl max-w-lg w-full shadow-2xl relative shadow-violet-500/10">
-            {showConfigModal === 'api-key' ? (
+            {showConfigModal === 'domain' ? (
+              <>
+                <h3 className="text-2xl font-bold text-white mb-2">Unauthorized Domain</h3>
+                <p className="text-zinc-400 mb-6 font-medium text-sm">
+                  This domain isn't authorized for Firebase Authentication. You need to add it to your Firebase project.
+                </p>
+                <ol className="space-y-4 mb-8 text-sm text-zinc-300">
+                  <li className="flex gap-4">
+                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">1</span>
+                    <span>Go to your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-violet-400 font-medium hover:underline">Firebase Console</a> and open your project.</span>
+                  </li>
+                  <li className="flex gap-4">
+                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">2</span>
+                    <span>Click on <strong>Authentication</strong> in the left sidebar, then go to the <strong>Settings</strong> tab.</span>
+                  </li>
+                  <li className="flex gap-4">
+                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">3</span>
+                    <span>Click on <strong>Authorized domains</strong>.</span>
+                  </li>
+                  <li className="flex gap-4">
+                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
+                    <span>Click <strong>Add domain</strong> and paste the current URL of this site (without https:// or paths, e.g. <code>{window.location.hostname}</code>) and click Add.</span>
+                  </li>
+                </ol>
+              </>
+            ) : showConfigModal === 'api-key' ? (
               <>
                 <h3 className="text-2xl font-bold text-white mb-2">Missing Firebase Configuration</h3>
                 <p className="text-zinc-400 mb-6 font-medium text-sm">
