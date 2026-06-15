@@ -2,7 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebaseConfig from '../firebase-applet-config.json';
+const configFiles = import.meta.glob('../firebase-applet-config.json', { eager: true });
+const firebaseConfig = configFiles['../firebase-applet-config.json'] ? (configFiles['../firebase-applet-config.json'] as any).default : {};
 
 console.log('firebaseConfig extracted:', firebaseConfig);
 
