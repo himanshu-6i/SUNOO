@@ -215,27 +215,21 @@ export function LoginView({ onLogin }: LoginViewProps) {
             {showConfigModal === 'domain' ? (
               <>
                 <h3 className="text-2xl font-bold text-white mb-2">Unauthorized Domain</h3>
-                <p className="text-zinc-400 mb-6 font-medium text-sm">
-                  This domain isn't authorized for Firebase Authentication. You need to add it to your Firebase project.
-                </p>
-                <ol className="space-y-4 mb-8 text-sm text-zinc-300">
-                  <li className="flex gap-4">
-                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">1</span>
-                    <span>Go to your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-violet-400 font-medium hover:underline">Firebase Console</a> and open your project.</span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">2</span>
-                    <span>Click on <strong>Authentication</strong> in the left sidebar, then go to the <strong>Settings</strong> tab.</span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">3</span>
-                    <span>Click on <strong>Authorized domains</strong>.</span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
-                    <span>Click <strong>Add domain</strong> and paste the current URL of this site (without https:// or paths, e.g. <code>{window.location.hostname}</code>) and click Add.</span>
-                  </li>
-                </ol>
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl mb-6">
+                  <p className="text-red-400 font-medium text-sm">
+                    Google Sign-In failed because this preview URL is not authorized.
+                  </p>
+                </div>
+                <div className="space-y-4 mb-8 text-sm text-zinc-300">
+                  <p>
+                    Since you are using the <strong>AI Studio Starter Tier</strong> shared project, you do not have permission to add new Authorized Domains.
+                  </p>
+                  <p className="text-white font-medium mt-4">How to fix this:</p>
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li><strong>Option 1 (Easiest):</strong> Close this modal and use <strong>Email/Password</strong> to sign up and log in. It works automatically without domain authorization!</li>
+                    <li><strong>Option 2:</strong> Go to the Firebase Console and <strong>Create a new project</strong> of your own. Enable Auth, add this URL to the Authorized Domains, and replace the keys in <code>firebase-applet-config.json</code>.</li>
+                  </ul>
+                </div>
               </>
             ) : showConfigModal === 'api-key' ? (
               <>
