@@ -16,7 +16,8 @@ import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockU
 import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
+import { ref, listAll, deleteObject } from 'firebase/storage';
+import { supabase } from './supabase';
 
 export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
@@ -269,15 +270,23 @@ export default function App() {
       let coverDownloadUrl = newTrack.coverUrl;
 
       if (files?.audio) {
-        const trackAudioRef = ref(storage, `tracks/${trackId}/audio_${files.audio.name}`);
-        const snapshot = await uploadBytes(trackAudioRef, files.audio);
-        audioDownloadUrl = await getDownloadURL(snapshot.ref);
+        const safeName = files.audio.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const audioPath = `audio_${Date.now()}_${safeName}`;
+        const { error } = await supabase.storage.from('tracks').upload(audioPath, files.audio);
+        if (error) throw new Error(`Supabase Audio Upload Error: ${error.message}`);
+        
+        const { data: { publicUrl } } = supabase.storage.from('tracks').getPublicUrl(audioPath);
+        audioDownloadUrl = publicUrl;
       }
 
       if (files?.cover) {
-        const trackCoverRef = ref(storage, `tracks/${trackId}/cover_${files.cover.name}`);
-        const snapshot = await uploadBytes(trackCoverRef, files.cover);
-        coverDownloadUrl = await getDownloadURL(snapshot.ref);
+        const safeName = files.cover.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const coverPath = `cover_${Date.now()}_${safeName}`;
+        const { error } = await supabase.storage.from('tracks').upload(coverPath, files.cover);
+        if (error) throw new Error(`Supabase Cover Upload Error: ${error.message}`);
+        
+        const { data: { publicUrl } } = supabase.storage.from('tracks').getPublicUrl(coverPath);
+        coverDownloadUrl = publicUrl;
       }
       
       const dbTrack = {

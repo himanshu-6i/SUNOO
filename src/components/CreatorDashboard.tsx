@@ -191,7 +191,9 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
       } catch (err: any) {
         setIsUploading(false);
         const errMsg = err.message || String(err) || '';
-        if (errMsg.includes('storage/') || errMsg.includes('unauthorized') || errMsg.includes('retry-limit-exceeded')) {
+        if (errMsg.includes('Supabase Audio Upload Error') || errMsg.includes('Supabase Cover Upload Error')) {
+           setUploadError(`${errMsg}. Please ensure that your Supabase URL and Anon Key are correct and that the "tracks" bucket exists and is public.`);
+        } else if (errMsg.includes('storage/') || errMsg.includes('unauthorized') || errMsg.includes('retry-limit-exceeded')) {
            setUploadError(`Upload failed (${errMsg}). If you just created this Firebase project, make sure "Storage" is enabled in your Firebase Console.`);
         } else if (errMsg.includes('JSON')) {
            setUploadError(`Storage is not fully initialized. Please go to your Firebase Console, click on "Storage" in the left sidebar, and click "Get Started" to initialize it.`);
