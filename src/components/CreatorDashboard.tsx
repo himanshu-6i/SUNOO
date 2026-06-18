@@ -193,6 +193,8 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
         const errMsg = err.message || String(err) || '';
         if (errMsg.includes('storage/') || errMsg.includes('unauthorized') || errMsg.includes('retry-limit-exceeded')) {
            setUploadError(`Upload failed (${errMsg}). If you just created this Firebase project, make sure "Storage" is enabled in your Firebase Console.`);
+        } else if (errMsg.includes('JSON')) {
+           setUploadError(`Storage is not fully initialized. Please go to your Firebase Console, click on "Storage" in the left sidebar, and click "Get Started" to initialize it.`);
         } else if (errMsg.includes('Missing or insufficient permissions')) {
            setUploadError(`Database permission denied. Ensure Firestore Rules are deployed and match the app schema.`);
         } else {
