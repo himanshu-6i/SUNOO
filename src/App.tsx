@@ -269,14 +269,14 @@ export default function App() {
       let coverDownloadUrl = newTrack.coverUrl;
 
       if (files?.audio) {
-        const audioRef = ref(storage, `tracks/${trackId}/audio_${files.audio.name}`);
-        const snapshot = await uploadBytes(audioRef, files.audio);
+        const trackAudioRef = ref(storage, `tracks/${trackId}/audio_${files.audio.name}`);
+        const snapshot = await uploadBytes(trackAudioRef, files.audio);
         audioDownloadUrl = await getDownloadURL(snapshot.ref);
       }
 
       if (files?.cover) {
-        const coverRef = ref(storage, `tracks/${trackId}/cover_${files.cover.name}`);
-        const snapshot = await uploadBytes(coverRef, files.cover);
+        const trackCoverRef = ref(storage, `tracks/${trackId}/cover_${files.cover.name}`);
+        const snapshot = await uploadBytes(trackCoverRef, files.cover);
         coverDownloadUrl = await getDownloadURL(snapshot.ref);
       }
       
