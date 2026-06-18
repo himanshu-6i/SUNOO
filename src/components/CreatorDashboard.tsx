@@ -190,9 +190,11 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
         setTimeout(() => setShowToast(false), 4000);
       } catch (err: any) {
         setIsUploading(false);
-        const errMsg = err.message || '';
-        if (errMsg.includes('storage/retry-limit-exceeded') || errMsg.includes('storage/unauthorized')) {
-           setUploadError('Upload failed. Check console for details.');
+        const errMsg = err.message || String(err) || '';
+        if (errMsg.includes('storage/') || errMsg.includes('unauthorized') || errMsg.includes('retry-limit-exceeded')) {
+           setUploadError(`Upload failed (${errMsg}). If you just created this Firebase project, make sure "Storage" is enabled in your Firebase Console.`);
+        } else if (errMsg.includes('Missing or insufficient permissions')) {
+           setUploadError(`Database permission denied. Ensure Firestore Rules are deployed and match the app schema.`);
         } else {
            setUploadError(errMsg || 'Failed to publish track.');
         }

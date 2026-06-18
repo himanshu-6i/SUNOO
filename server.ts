@@ -34,9 +34,9 @@ async function startServer() {
   // The upload API route
   app.post('/api/upload', upload.fields([{ name: 'audio', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), (req, res) => {
     try {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const audioFile = files['audio']?.[0];
-      const coverFile = files['cover']?.[0];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const audioFile = files && files['audio'] ? files['audio'][0] : null;
+      const coverFile = files && files['cover'] ? files['cover'][0] : null;
 
       res.json({
         audioUrl: audioFile ? `/uploads/${audioFile.filename}` : null,

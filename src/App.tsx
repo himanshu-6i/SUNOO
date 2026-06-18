@@ -268,24 +268,16 @@ export default function App() {
       let audioDownloadUrl = newTrack.audioUrl;
       let coverDownloadUrl = newTrack.coverUrl;
 
-      if (files?.audio || files?.cover) {
-        const formData = new FormData();
-        if (files.audio) formData.append('audio', files.audio);
-        if (files.cover) formData.append('cover', files.cover);
+      if (files?.audio) {
+        const audioRef = ref(storage, `tracks/${trackId}/audio_${files.audio.name}`);
+        const snapshot = await uploadBytes(audioRef, files.audio);
+        audioDownloadUrl = await getDownloadURL(snapshot.ref);
+      }
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!response.ok) {
-           const err = await response.json();
-           throw new Error(err.error || 'Failed to upload files to server');
-        }
-
-        const data = await response.json();
-        if (data.audioUrl) audioDownloadUrl = data.audioUrl;
-        if (data.coverUrl) coverDownloadUrl = data.coverUrl;
+      if (files?.cover) {
+        const coverRef = ref(storage, `tracks/${trackId}/cover_${files.cover.name}`);
+        const snapshot = await uploadBytes(coverRef, files.cover);
+        coverDownloadUrl = await getDownloadURL(snapshot.ref);
       }
       
       const dbTrack = {
