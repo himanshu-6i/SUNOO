@@ -17,8 +17,8 @@ import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockU
 import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { ref, listAll, deleteObject } from 'firebase/storage';
-import { supabase } from './supabase';
+import { ref, listAll, deleteObject, getDownloadURL, uploadBytes } from 'firebase/storage';
+
 
 export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
@@ -343,21 +343,17 @@ export default function App() {
       if (files?.audio) {
         const safeName = files.audio.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
         const audioPath = `audio_${Date.now()}_${safeName}`;
-        const { error } = await supabase.storage.from('tracks').upload(audioPath, files.audio);
-        if (error) throw new Error(`Supabase Audio Upload Error: ${error.message}`);
-        
-        const { data: { publicUrl } } = supabase.storage.from('tracks').getPublicUrl(audioPath);
-        audioDownloadUrl = publicUrl;
+        const audioRef = ref(storage, `tracks/${audioPath}`);
+        await uploadBytes(audioRef, files.audio);
+        audioDownloadUrl = await getDownloadURL(audioRef);
       }
 
       if (files?.cover) {
         const safeName = files.cover.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
         const coverPath = `cover_${Date.now()}_${safeName}`;
-        const { error } = await supabase.storage.from('tracks').upload(coverPath, files.cover);
-        if (error) throw new Error(`Supabase Cover Upload Error: ${error.message}`);
-        
-        const { data: { publicUrl } } = supabase.storage.from('tracks').getPublicUrl(coverPath);
-        coverDownloadUrl = publicUrl;
+        const coverRef = ref(storage, `covers/${coverPath}`);
+        await uploadBytes(coverRef, files.cover);
+        coverDownloadUrl = await getDownloadURL(coverRef);
       }
       
       const dbTrack = {
