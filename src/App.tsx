@@ -59,13 +59,16 @@ export default function App() {
       
       if (willSourceChange) {
         audio.src = currentTrack.audioUrl;
-        audio.load();
       }
       
       if (isPlaying) {
         const playPromise = audio.play();
         if (playPromise !== undefined) {
-          playPromise.catch(err => console.error("Playback prevented:", err));
+          playPromise.catch(err => {
+            if (err.name !== 'AbortError') {
+              console.error("Playback prevented:", err);
+            }
+          });
         }
       } else {
         audio.pause();
@@ -175,6 +178,18 @@ export default function App() {
       setCurrentTime(formatTime(current));
       setDuration(formatTime(total));
       setProgress(total > 0 ? current / total : 0);
+
+      if ('mediaSession' in navigator && !isNaN(total) && total > 0) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: total,
+            playbackRate: audioRef.current.playbackRate,
+            position: current,
+          });
+        } catch (e) {
+          // Ignore state update errors
+        }
+      }
     }
   };
 
@@ -195,6 +210,38 @@ export default function App() {
     setCurrentIndex((prev) => (prev - 1 + queue.length) % queue.length);
     setIsPlaying(true);
   };
+
+  useEffect(() => {
+    if ('mediaSession' in navigator && currentTrack) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist || 'Unknown Artist',
+        album: currentTrack.genre,
+        artwork: [
+          { src: currentTrack.coverUrl, sizes: '96x96', type: 'image/jpeg' },
+          { src: currentTrack.coverUrl, sizes: '128x128', type: 'image/jpeg' },
+          { src: currentTrack.coverUrl, sizes: '256x256', type: 'image/jpeg' },
+          { src: currentTrack.coverUrl, sizes: '512x512', type: 'image/jpeg' },
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        setIsPlaying(true);
+        if (audioRef.current) audioRef.current.play();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        setIsPlaying(false);
+        if (audioRef.current) audioRef.current.pause();
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+         if (details.seekTime && audioRef.current) {
+           audioRef.current.currentTime = details.seekTime;
+         }
+      });
+    }
+  }, [currentTrack, queue, isPlaying]);
 
   const handlePlayTrack = (track: Track, newQueue?: Track[]) => {
     const q = newQueue && newQueue.length > 0 ? newQueue : [track];
@@ -471,7 +518,8 @@ export default function App() {
         ref={audioRef} 
         onTimeUpdate={handleTimeUpdate} 
         onLoadedMetadata={handleTimeUpdate}
-        onEnded={handleEnded} 
+        onEnded={handleEnded}
+        playsInline
       />
       <Sidebar currentView={currentView} setView={handleNavigate} subscriptionPlan={subscriptionPlan} />
       <main className="flex-1 flex flex-col relative bg-[#121212]">

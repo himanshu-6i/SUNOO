@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, DragEvent } from 'react';
-import { Upload, BarChart3, Users, DollarSign, Music, CheckCircle2, X, Image as ImageIcon, Music4, Check, Play, FileAudio } from 'lucide-react';
+import { Upload, BarChart3, Users, DollarSign, Music, CheckCircle2, X, Image as ImageIcon, Music4, Check, Play, FileAudio, AlertTriangle } from 'lucide-react';
 import { currentUser as mockUser, trendingTracks } from '../data';
 
 import { Track } from '../types';
@@ -62,6 +62,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
   const [uploadError, setUploadError] = useState('');
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   // Audio Extraction State
   const [audioMetadata, setAudioMetadata] = useState<{ duration: number; bitrate: number } | null>(null);
@@ -225,8 +226,8 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#18181b] border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative">
-            <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
+          <div className="bg-[#18181b] border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl relative">
+            <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02] shrink-0 rounded-t-3xl">
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                 <Upload className="w-6 h-6 text-violet-400" />
                 New Release Distribution
@@ -240,8 +241,9 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
               </button>
             </div>
             
-            <form onSubmit={handleUploadSubmit} className="p-6 space-y-6">
-              {uploadError && (
+            <div className="overflow-y-auto p-6 flex-1 custom-scrollbar">
+              <form onSubmit={handleUploadSubmit} className="space-y-6">
+                {uploadError && (
                 <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-4 rounded-lg flex items-start gap-3 animate-in fade-in">
                   <X className="w-5 h-5 shrink-0 mt-0.5" />
                   <div className="space-y-1">
@@ -396,6 +398,40 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                 </div>
               )}
 
+              <div className="bg-white/5 border border-amber-500/30 rounded-xl p-4 text-sm mt-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="text-zinc-300 space-y-2">
+                    <p className="font-semibold text-amber-500">IMPORTANT COPYRIGHT & CONTENT POLICY</p>
+                    <p>By uploading content to SUNOO, you confirm that:</p>
+                    <ul className="list-none space-y-1">
+                      <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> The song is your original creation, AI-generated work, or content you have legal rights to upload.</li>
+                      <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> You own or have permission to use all vocals, lyrics, instrumentals, samples, cover art, and audio included in the upload.</li>
+                      <li className="flex items-start gap-2"><X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" /> Do NOT upload copyrighted songs, commercial releases, or music owned by other artists, labels, or companies without permission.</li>
+                      <li className="flex items-start gap-2"><X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" /> Do NOT upload content that infringes copyrights, trademarks, or intellectual property rights.</li>
+                    </ul>
+                    <p className="text-zinc-400 text-xs pt-1">SUNOO is designed primarily for AI-generated music, original creations, and royalty-free content. Users are solely responsible for the content they upload. Any content found to violate copyright laws may be removed without notice, and accounts may be restricted or terminated.</p>
+                  </div>
+                </div>
+                <label className="flex items-start gap-3 cursor-pointer group mt-4 pt-4 border-t border-white/5">
+                  <div className="relative flex items-center justify-center mt-0.5">
+                    <input 
+                      type="checkbox" 
+                      className="peer sr-only"
+                      checked={hasAcceptedTerms}
+                      onChange={(e) => setHasAcceptedTerms(e.target.checked)}
+                      disabled={isUploading}
+                    />
+                    <div className="w-5 h-5 border-2 border-zinc-500 rounded bg-black/50 peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-all flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                  <span className="text-zinc-300 group-hover:text-white transition-colors">
+                    I agree to these terms and confirm that I have the necessary rights to distribute and share the content.
+                  </span>
+                </label>
+              </div>
+
               <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                 <button 
                   type="button"
@@ -407,7 +443,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                 </button>
                 <button 
                   type="submit"
-                  disabled={isUploading || !title || !genre || !coverFile || !audioFile}
+                  disabled={isUploading || !title || !genre || !coverFile || !audioFile || !hasAcceptedTerms}
                   className="bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-violet-500 text-white px-8 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] flex items-center justify-center min-w-[140px]"
                 >
                   {isUploading ? (
@@ -419,6 +455,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
