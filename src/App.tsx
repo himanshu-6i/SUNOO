@@ -18,7 +18,7 @@ import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, listAll, deleteObject, getDownloadURL, uploadBytes } from 'firebase/storage';
-
+import { supabase } from './supabase';
 
 export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
@@ -343,17 +343,23 @@ export default function App() {
       if (files?.audio) {
         const safeName = files.audio.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
         const audioPath = `audio_${Date.now()}_${safeName}`;
-        const audioRef = ref(storage, `tracks/${audioPath}`);
-        await uploadBytes(audioRef, files.audio);
-        audioDownloadUrl = await getDownloadURL(audioRef);
+        
+        const { error: audioError } = await supabase.storage.from('tracks').upload(audioPath, files.audio);
+        if (audioError) throw new Error(`Supabase Audio Upload Error: ${audioError.message}`);
+        
+        const { data: { publicUrl: audioUrl } } = supabase.storage.from('tracks').getPublicUrl(audioPath);
+        audioDownloadUrl = audioUrl;
       }
 
       if (files?.cover) {
         const safeName = files.cover.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
         const coverPath = `cover_${Date.now()}_${safeName}`;
-        const coverRef = ref(storage, `covers/${coverPath}`);
-        await uploadBytes(coverRef, files.cover);
-        coverDownloadUrl = await getDownloadURL(coverRef);
+        
+        const { error: coverError } = await supabase.storage.from('tracks').upload(coverPath, files.cover);
+        if (coverError) throw new Error(`Supabase Cover Upload Error: ${coverError.message}`);
+        
+        const { data: { publicUrl: coverUrl } } = supabase.storage.from('tracks').getPublicUrl(coverPath);
+        coverDownloadUrl = coverUrl;
       }
       
       const dbTrack = {
