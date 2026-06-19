@@ -1,14 +1,16 @@
 import { Home, Search, Library, User, Settings, Music, PlusCircle, LayoutDashboard } from 'lucide-react';
-import { ViewState } from '../types';
+import { ViewState, Artist } from '../types';
 import { SunooLogo } from './SunooLogo';
 
 interface SidebarProps {
   currentView: ViewState;
   setView: (view: ViewState) => void;
   subscriptionPlan: string;
+  popularArtists?: Artist[];
+  onArtistClick?: (artist: Artist) => void;
 }
 
-export function Sidebar({ currentView, setView, subscriptionPlan }: SidebarProps) {
+export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists = [], onArtistClick }: SidebarProps) {
   const navItems = [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'search', icon: Search, label: 'Search' },
@@ -63,6 +65,18 @@ export function Sidebar({ currentView, setView, subscriptionPlan }: SidebarProps
                 {item.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <p className="px-4 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Popular Artists</p>
+          <div className="flex gap-4 px-4 overflow-x-auto scrollbar-hide pb-2 snap-x">
+             {popularArtists.map(artist => (
+               <div key={artist.id} className="flex flex-col items-center gap-2 cursor-pointer group shrink-0 snap-start w-[60px]" onClick={() => onArtistClick?.(artist)}>
+                  <img src={artist.imageUrl} alt={artist.name} className="w-12 h-12 rounded-full object-cover group-hover:scale-105 transition-transform shadow-lg" />
+                  <span className="text-[10px] text-center w-full truncate font-medium text-zinc-400 group-hover:text-white transition-colors">{artist.name}</span>
+               </div>
+             ))}
           </div>
         </div>
       </nav>

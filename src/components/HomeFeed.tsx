@@ -1,16 +1,18 @@
 import { Play, Sparkles, Clock } from 'lucide-react';
-import { Track, Playlist } from '../types';
+import { Track, Playlist, Artist } from '../types';
 
 interface HomeFeedProps {
   trending: Track[];
   aiPlaylists: Playlist[];
   recentlyPlayed: Track[];
+  popularArtists?: Artist[];
   onPlay: (track: Track, contextQueue: Track[]) => void;
   onSaveMix?: () => void;
   isMixSaved?: boolean;
+  onArtistClick?: (artist: Artist) => void;
 }
 
-export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, onPlay, onSaveMix, isMixSaved }: HomeFeedProps) {
+export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists = [], onPlay, onSaveMix, isMixSaved, onArtistClick }: HomeFeedProps) {
   return (
     <div className="flex-1 overflow-y-auto pb-32">
       {/* Hero Banner / AI Recommendation */}
@@ -94,6 +96,36 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, onPlay, onSave
                   </div>
                   <h3 className="text-white font-semibold mb-1 truncate">{track.title}</h3>
                   <p className="text-sm text-zinc-400 truncate">{track.artist}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Popular Artists Section */}
+        {popularArtists.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white hover:underline cursor-pointer">Popular artists</h2>
+              <span className="text-sm font-bold text-zinc-400 hover:underline cursor-pointer">Show all</span>
+            </div>
+            <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide snap-x">
+              {popularArtists.map((artist) => (
+                <div key={artist.id} className="group min-w-[160px] max-w-[180px] p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer snap-start shrink-0" onClick={() => onArtistClick?.(artist)}>
+                  <div className="relative aspect-square mb-4 overflow-hidden rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+                    <img src={artist.imageUrl} className="w-full h-full object-cover" alt={artist.name} />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Placeholder for artist direct play
+                      }}
+                      className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl z-10"
+                    >
+                      <Play className="w-6 h-6 text-black fill-current ml-1" />
+                    </button>
+                  </div>
+                  <h3 className="text-white font-semibold mb-1 truncate text-center">{artist.name}</h3>
+                  <p className="text-sm text-zinc-400 truncate text-center">Artist</p>
                 </div>
               ))}
             </div>

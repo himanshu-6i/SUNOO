@@ -6,3 +6,15 @@
   --font-display: "Space Grotesk", ui-sans-serif, system-ui;
 }
 
+@layer utilities {
+  .scrollbar-hide {
+    /* IE and Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+

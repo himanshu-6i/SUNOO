@@ -39,4 +39,10 @@ export interface Notification {
   read: boolean;
 }
 
-export type ViewState = 'home' | 'search' | 'library' | 'creator' | 'premium' | 'profile' | 'settings';
+export interface Artist {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
+
+export type ViewState = 'home' | 'search' | 'library' | 'creator' | 'premium' | 'profile' | 'settings' | 'artist';

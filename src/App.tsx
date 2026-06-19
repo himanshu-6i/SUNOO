@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Player } from './components/Player';
 import { TopBar } from './components/TopBar';
@@ -11,8 +11,9 @@ import { PremiumView } from './components/PremiumView';
 import { ProfileView } from './components/ProfileView';
 import { SettingsView } from './components/SettingsView';
 import { AddToPlaylistModal } from './components/AddToPlaylistModal';
-import { ViewState, Track, Notification, Playlist } from './types';
-import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser } from './data';
+import { ArtistView } from './components/ArtistView';
+import { ViewState, Track, Notification, Playlist, Artist } from './types';
+import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser, popularArtists } from './data';
 import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -23,6 +24,7 @@ export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState | string>('home');
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [libraryTab, setLibraryTab] = useState<'liked' | 'playlists' | 'downloaded' | 'uploaded'>('liked');
   const [history, setHistory] = useState<string[]>(['home']);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -48,6 +50,28 @@ export default function App() {
   
   // Provide some initial mock liked tracks
   const [likedTrackIds, setLikedTrackIds] = useState<Set<string>>(new Set([allTracks[0].id, allTracks[2].id]));
+
+  const dynamicArtists = useMemo(() => {
+    const artistsMap = new Map<string, Artist>();
+    
+    // Add default popular artists first
+    popularArtists.forEach(artist => {
+      artistsMap.set(artist.name, artist);
+    });
+
+    // Add unique artists from tracking uploads
+    allTracks.forEach(track => {
+      if (track.artist && !artistsMap.has(track.artist)) {
+        artistsMap.set(track.artist, {
+          id: `dyn_${track.artist.replace(/\s+/g, '').toLowerCase()}`,
+          name: track.artist,
+          imageUrl: track.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80'
+        });
+      }
+    });
+
+    return Array.from(artistsMap.values());
+  }, [allTracks]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -472,6 +496,11 @@ export default function App() {
     }
   };
 
+  const handleArtistClick = (artist: Artist) => {
+    setSelectedArtist(artist);
+    handleNavigate('artist');
+  };
+
   const renderContent = () => {
     switch (currentView) {
       case 'home':
@@ -479,10 +508,18 @@ export default function App() {
                  trending={allTracks} 
                  aiPlaylists={aiPlaylists} 
                  recentlyPlayed={recentlyPlayed} 
+                 popularArtists={dynamicArtists}
                  onPlay={handlePlayTrack} 
                  onSaveMix={handleSaveMix} 
                  isMixSaved={userPlaylists.some(p => p.title === 'Your Evening Flow')} 
+                 onArtistClick={handleArtistClick}
                />;
+      case 'artist':
+        if (selectedArtist) {
+          const artistTracks = allTracks.filter(t => t.artist === selectedArtist.name);
+          return <ArtistView artist={selectedArtist} tracks={artistTracks} onPlay={handlePlayTrack} />;
+        }
+        return null;
       case 'creator':
         return <CreatorDashboard tracks={allTracks} onPlay={handlePlayTrack} onTrackUpload={handleTrackUpload} />;
       case 'search':
@@ -521,8 +558,8 @@ export default function App() {
         onEnded={handleEnded}
         playsInline
       />
-      <Sidebar currentView={currentView} setView={handleNavigate} subscriptionPlan={subscriptionPlan} />
-      <main className="flex-1 flex flex-col relative bg-[#121212]">
+      <Sidebar currentView={currentView} setView={handleNavigate} subscriptionPlan={subscriptionPlan} popularArtists={dynamicArtists} onArtistClick={handleArtistClick} />
+      <main className="flex-1 flex flex-col relative bg-[#121212] overflow-hidden min-w-0">
         <TopBar 
           searchQuery={searchQuery} 
           onSearchChange={handleSearchChange}

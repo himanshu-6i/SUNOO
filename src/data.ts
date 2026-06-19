@@ -1,4 +1,4 @@
-import { Track, Playlist, User, Notification } from './types';
+import { Track, Playlist, User, Notification, Artist } from './types';
 
 export const currentUser: User = {
   id: 'u1',
@@ -84,6 +84,15 @@ export const trendingTracks: Track[] = [
     genre: 'Hip Hop',
     plays: 1805000
   }
+];
+
+export const popularArtists: Artist[] = [
+  { id: 'a1', name: 'Arijit Singh', imageUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a2', name: 'Alan Walker', imageUrl: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a3', name: 'Vishal Mishra', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a4', name: 'Pritam', imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a5', name: 'Anirudh', imageUrl: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a6', name: 'Shreya Ghoshal', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' }
 ];
 
 export const aiPlaylists: Playlist[] = [
