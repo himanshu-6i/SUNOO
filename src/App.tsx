@@ -159,7 +159,6 @@ export default function App() {
 
   const handleLogin = () => {
     setIsAuthenticated(true);
-    setSessionUser({ uid: 'u1', email: 'alex@example.com', displayName: 'Alex Chen', photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' } as User);
   };
 
   const formatTime = (time: number) => {

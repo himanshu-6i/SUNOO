@@ -23,30 +23,63 @@ export function LoginView({ onLogin }: LoginViewProps) {
     e.preventDefault();
     setIsLoading(true);
     setAuthError('');
-    
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
       onLogin();
-    }, 1000);
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      if (error.code === 'auth/operation-not-allowed') {
+        setShowConfigModal('email');
+      } else if (error.code === 'auth/api-key-not-valid') {
+        setShowConfigModal('api-key');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setShowConfigModal('domain');
+      } else {
+        setAuthError(error.message || 'Failed to authenticate');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     setAuthError('');
-    setTimeout(() => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      // Let the onAuthStateChanged in App.tsx handle navigation
+    } catch (error: any) {
+      console.error('Error signing in with Google:', error);
+      if (error.code === 'auth/operation-not-allowed') {
+        setShowConfigModal('google');
+      } else if (error.code === 'auth/api-key-not-valid') {
+        setShowConfigModal('api-key');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setShowConfigModal('domain');
+      } else {
+        setAuthError(error.message || 'Failed to sign in with Google');
+      }
       setIsGoogleLoading(false);
-      onLogin();
-    }, 1000);
+    }
   };
 
   const handleGithubLogin = async () => {
     setIsGithubLoading(true);
     setAuthError('');
-    setTimeout(() => {
+    try {
+      const provider = new GithubAuthProvider();
+      await signInWithPopup(auth, provider);
+      // Let the onAuthStateChanged in App.tsx handle navigation
+    } catch (error: any) {
+      console.error('Error signing in with Github:', error);
+      setAuthError(error.message || 'Failed to sign in with Github');
       setIsGithubLoading(false);
-      onLogin();
-    }, 1000);
+    }
   };
 
   return (
