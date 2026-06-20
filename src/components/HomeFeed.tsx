@@ -1,26 +1,78 @@
-import { Play, Sparkles, Clock, Flame, Music, Heart, MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Sparkles, Clock, Flame, Music, Heart, MoreHorizontal, Info } from 'lucide-react';
 import { Track, Playlist, Artist } from '../types';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface HomeFeedProps {
   trending: Track[];
   aiPlaylists: Playlist[];
   recentlyPlayed: Track[];
   popularArtists?: Artist[];
+  newReleases?: Track[];
+  likedTracks?: Track[];
   onPlay: (track: Track, contextQueue: Track[]) => void;
   onSaveMix?: () => void;
   isMixSaved?: boolean;
   onArtistClick?: (artist: Artist) => void;
   onGenerateClick?: () => void;
+  onNavigate?: (view: string) => void;
 }
 
-export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists = [], onPlay, onSaveMix, isMixSaved, onArtistClick, onGenerateClick }: HomeFeedProps) {
+export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists = [], newReleases = [], likedTracks = [], onPlay, onSaveMix, isMixSaved, onArtistClick, onGenerateClick, onNavigate }: HomeFeedProps) {
+  
+  const [showAllPlaylists, setShowAllPlaylists] = useState(false);
+  const [showAllTrending, setShowAllTrending] = useState(false);
+  const [showAllArtists, setShowAllArtists] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
+  const displayedPlaylists = showAllPlaylists ? aiPlaylists : aiPlaylists.slice(0, 5);
+  const displayedTrending = showAllTrending ? trending : trending.slice(0, 5);
+  const displayedArtists = showAllArtists ? popularArtists : popularArtists.slice(0, 6);
   
   const quickLinks = [
-    { icon: <Music className="w-6 h-6 text-[#a22bd8]" />, title: 'AI Generated', desc: 'Songs created by AI for you' },
-    { icon: <Flame className="w-6 h-6 text-orange-500" />, title: 'Trending Now', desc: 'Most popular AI songs' },
-    { icon: <Sparkles className="w-6 h-6 text-pink-400" />, title: 'New Releases', desc: 'Latest AI songs and albums' },
-    { icon: <Heart className="w-6 h-6 text-rose-500" />, title: 'For You', desc: 'Personalized recommendations' },
+    { 
+      icon: <Music className="w-6 h-6 text-white" />, 
+      title: 'AI Generated', 
+      desc: 'Songs created by AI for you',
+      onClick: () => {
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+    },
+    { 
+      icon: <Flame className="w-6 h-6 text-white" />, 
+      title: 'Trending Now', 
+      desc: 'Most popular AI songs',
+      onClick: () => {
+        if (trending.length > 0) onPlay(trending[0], trending);
+      }
+    },
+    { 
+      icon: <Sparkles className="w-6 h-6 text-white" />, 
+      title: 'New Releases', 
+      desc: 'Latest AI songs and albums',
+      onClick: () => {
+        if (newReleases.length > 0) {
+          onPlay(newReleases[0], newReleases);
+        } else if (trending.length > 0) {
+          onPlay(trending[0], trending);
+        }
+      }
+    },
+    { 
+      icon: <Heart className="w-6 h-6 text-white" />, 
+      title: 'For You', 
+      desc: 'Personalized recommendations',
+      onClick: () => {
+        if (likedTracks.length > 0) {
+          onPlay(likedTracks[0], likedTracks);
+        } else if (recentlyPlayed && recentlyPlayed.length > 0) {
+          onPlay(recentlyPlayed[0], recentlyPlayed);
+        } else if (trending.length > 0) {
+          onPlay(trending[0], trending);
+        }
+      }
+    },
   ];
 
   return (
@@ -35,7 +87,7 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="relative z-10 p-10 md:p-14 md:pr-0 md:w-[60%] lg:w-[50%]"
           >
-            <div className="flex items-center gap-2 text-[#e24e5b] font-bold text-xs tracking-widest mb-6 uppercase">
+            <div className="flex items-center gap-2 text-fuchsia-400 font-bold text-xs tracking-widest mb-6 uppercase">
               <Sparkles className="w-4 h-4" />
               <span>AI Powered Music</span>
             </div>
@@ -48,7 +100,7 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
             <div className="flex flex-wrap gap-4">
               <button 
                 onClick={() => trending.length > 0 && onPlay(trending[0], trending)}
-                className="px-8 py-3.5 bg-gradient-to-r from-[#e24e5b] to-[#f47f4d] text-white font-bold rounded-full hover:opacity-90 transition-opacity flex items-center gap-2 shadow-lg shadow-[#e24e5b]/20"
+                className="px-8 py-3.5 bg-gradient-to-r from-[#a22bd8] via-[#e24e5b] to-[#f47f4d] text-white font-bold rounded-full hover:opacity-90 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(226,78,91,0.4)]"
               >
                 <Play className="w-5 h-5 fill-current" />
                 Play Mix
@@ -91,8 +143,8 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
         {/* Quick Links Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            {quickLinks.map((link, i) => (
-             <div key={i} className="bg-[#121215] border border-white/5 p-5 rounded-[1.5rem] flex items-center gap-4 hover:bg-[#18181b] transition-colors cursor-pointer group">
-                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+             <div key={i} onClick={link.onClick} className="bg-[#121215] border border-white/5 p-5 rounded-[1.5rem] flex items-center gap-4 hover:bg-[#18181b] transition-colors cursor-pointer group">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#a22bd8] via-[#e24e5b] to-[#f47f4d] flex items-center justify-center shrink-0 group-hover:scale-110 transition-all shadow-lg shadow-[#e24e5b]/20">
                   {link.icon}
                 </div>
                 <div>
@@ -107,10 +159,14 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
         <section>
           <div className="flex items-center justify-between mb-6">
              <h2 className="text-[22px] font-bold text-white tracking-tight">Made For You</h2>
-             <span className="text-[13px] font-medium text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center">View all <ChevronRight className="w-4 h-4 ml-1"/></span>
+             {aiPlaylists.length > 5 && (
+               <span className="text-[13px] font-medium text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center" onClick={() => setShowAllPlaylists(!showAllPlaylists)}>
+                 {showAllPlaylists ? 'Show less' : 'View all'} <ChevronRight className={`w-4 h-4 ml-1 transition-transform ${showAllPlaylists ? '-rotate-90' : ''}`}/>
+               </span>
+             )}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {aiPlaylists.map((playlist) => (
+            {displayedPlaylists.map((playlist) => (
               <div key={playlist.id} className="group bg-transparent transition-all cursor-pointer">
                 <div className="relative aspect-square mb-4 overflow-hidden rounded-[1.5rem] shadow-lg">
                   <img src={playlist.coverUrl} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={playlist.title} />
@@ -133,7 +189,11 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
         <section>
           <div className="flex items-center justify-between mb-6">
              <h2 className="text-[22px] font-bold text-white tracking-tight">Trending AI Songs</h2>
-             <span className="text-[13px] font-medium text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center">View all <ChevronRight className="w-4 h-4 ml-1"/></span>
+             {trending.length > 5 && (
+               <span className="text-[13px] font-medium text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center" onClick={() => setShowAllTrending(!showAllTrending)}>
+                 {showAllTrending ? 'Show less' : 'View all'} <ChevronRight className={`w-4 h-4 ml-1 transition-transform ${showAllTrending ? '-rotate-90' : ''}`}/>
+               </span>
+             )}
           </div>
           <div>
             <div className="grid grid-cols-[32px_3fr_2fr_1fr_1fr_40px] gap-4 px-4 py-2 mb-2 text-[11px] font-bold tracking-wider text-zinc-500 uppercase border-b border-white/5">
@@ -145,7 +205,7 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
               <span className="text-center flex justify-center"><Clock className="w-4 h-4" /></span>
             </div>
             <div className="space-y-1">
-              {trending.slice(0, 5).map((track, idx) => (
+              {displayedTrending.map((track, idx) => (
                 <div 
                   key={track.id} 
                   onClick={() => onPlay(track, trending)}
@@ -159,8 +219,8 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
                     <img src={track.coverUrl} className="w-[42px] h-[42px] rounded-lg object-cover flex-shrink-0 shadow-md" alt={track.title} />
                     <div className="min-w-0 pr-4">
                       <div className="flex items-center gap-2">
-                         <p className="text-[14px] text-white font-bold group-hover:text-[#a22bd8] transition-colors truncate">{track.title}</p>
-                         <span className="bg-[#a22bd8] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none">AI</span>
+                         <p className="text-[14px] text-white font-bold group-hover:text-fuchsia-400 transition-colors truncate">{track.title}</p>
+                         <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none">AI</span>
                       </div>
                     </div>
                   </div>
@@ -188,12 +248,16 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[22px] font-bold text-white tracking-tight">AI Artists</h2>
-              <span className="text-[13px] font-medium text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center">View all <ChevronRight className="w-4 h-4 ml-1"/></span>
+              {popularArtists.length > 6 && (
+                <span className="text-[13px] font-medium text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center" onClick={() => setShowAllArtists(!showAllArtists)}>
+                  {showAllArtists ? 'Show less' : 'View all'} <ChevronRight className={`w-4 h-4 ml-1 transition-transform ${showAllArtists ? '-rotate-90' : ''}`}/>
+                </span>
+              )}
             </div>
             <div className="flex overflow-x-auto gap-8 pb-4 scrollbar-hide snap-x">
-              {popularArtists.map((artist) => (
+              {displayedArtists.map((artist) => (
                 <div key={artist.id} className="group flex flex-col items-center gap-4 cursor-pointer snap-start shrink-0" onClick={() => onArtistClick?.(artist)}>
-                  <div className="relative w-[140px] h-[140px] rounded-full p-[3px] bg-gradient-to-b from-[#a22bd8] to-[#f47f4d] group-hover:scale-105 transition-transform duration-300">
+                  <div className="relative w-[140px] h-[140px] rounded-full p-[3px] bg-gradient-to-b from-violet-600 to-fuchsia-600 group-hover:scale-105 transition-transform duration-300">
                     <div className="w-full h-full rounded-full bg-black overflow-hidden border-[4px] border-[#121215]">
                        <img src={artist.imageUrl} className="w-full h-full object-cover mix-blend-luminosity opacity-80 group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500" alt={artist.name} />
                     </div>
@@ -205,6 +269,24 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
           </section>
         )}
       </div>
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#121215] border border-[#a22bd8]/30 px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(162,43,216,0.15)] flex items-center gap-4 z-50 backdrop-blur-xl"
+          >
+            <div className="w-10 h-10 rounded-full bg-[#1a0b2e] flex items-center justify-center">
+              <Info className="w-5 h-5 text-[#a22bd8]" />
+            </div>
+            <div>
+              <p className="text-white font-medium">Updating soon</p>
+              <p className="text-zinc-400 text-sm">We are cooking up some new songs for you.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

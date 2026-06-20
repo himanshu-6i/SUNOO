@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, Mic2, Heart, PlusCircle, Maximize2, ListMusic, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, Mic2, Heart, PlusCircle, Maximize2, ListMusic, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { Track } from '../types';
 
 interface PlayerProps {
@@ -22,6 +22,9 @@ interface PlayerProps {
 
 export function Player({ currentTrack, isPlaying, progress, currentTime, duration, volume, isLiked, onTogglePlay, onNext, onPrev, onSeek, onVolumeChange, onToggleLike, onAddToPlaylist, onDownload }: PlayerProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   if (!currentTrack) return null;
 
@@ -73,7 +76,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
         </div>
         <div className="flex items-center gap-3 ml-2">
           <button onClick={onToggleLike} className="transition-colors focus:outline-none" title="Like">
-            <Heart className={`w-[18px] h-[18px] ${isLiked ? 'text-[#a22bd8] fill-current' : 'text-zinc-500 hover:text-white'}`} />
+            <Heart className={`w-[18px] h-[18px] ${isLiked ? 'text-fuchsia-400 fill-current' : 'text-zinc-500 hover:text-white'}`} />
           </button>
           <button onClick={onAddToPlaylist} className="transition-colors focus:outline-none" title="Add to Playlist">
             <PlusCircle className="w-[18px] h-[18px] text-zinc-500 hover:text-white" />
@@ -84,7 +87,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
       {/* Main Controls */}
       <div className="flex flex-col items-center max-w-[600px] w-2/4 gap-2">
         <div className="flex items-center gap-6">
-          <button className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={() => setIsShuffle(!isShuffle)} className={`${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Shuffle className="w-4 h-4" />
           </button>
           <button onClick={onPrev} className="text-zinc-400 hover:text-white transition-colors">
@@ -92,7 +95,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           </button>
           <button 
             onClick={onTogglePlay}
-            className="w-11 h-11 bg-[#d946ef] rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-[#d946ef]/20"
+            className="w-11 h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_15px_rgba(168,85,247,0.5)]"
           >
             {isPlaying ? (
               <Pause className="w-5 h-5 text-white fill-current" />
@@ -103,7 +106,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           <button onClick={onNext} className="text-zinc-400 hover:text-white transition-colors">
             <SkipForward className="w-5 h-5 fill-current" />
           </button>
-          <button className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={() => setIsRepeat(!isRepeat)} className={`${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Repeat className="w-4 h-4" />
           </button>
         </div>
@@ -114,7 +117,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           <div className="flex-1 relative flex items-center h-4 group">
             <div className="absolute left-0 w-full h-1 bg-[#1a1a1a] rounded overflow-hidden pointer-events-none">
               <div 
-                className="h-full bg-[#a22bd8] group-hover:bg-[#c333ff] transition-colors duration-100"
+                className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-colors duration-100"
                 style={{ width: `${progress * 100}%` }}
               />
             </div>
@@ -140,32 +143,51 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
       {/* Extra Controls */}
       <div className="flex items-center justify-end gap-5 w-1/4 min-w-[200px] text-zinc-400">
         <div className="flex items-center gap-2 group w-24">
-          <Volume2 className="w-[18px] h-[18px] text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0" />
+          <button onClick={() => {
+            if (isMuted) {
+              setIsMuted(false);
+              onVolumeChange(0.5); // Restore to a default volume or we could store previous volume
+            } else {
+              setIsMuted(true);
+              onVolumeChange(0);
+            }
+          }}>
+            {isMuted || volume === 0 ? <VolumeX className="w-[18px] h-[18px] text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0" /> : <Volume2 className="w-[18px] h-[18px] text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0" />}
+          </button>
           <div className="relative flex-1 flex items-center h-4 group-hover:block">
              <div className="absolute left-0 w-full h-1 bg-[#1a1a1a] rounded overflow-hidden pointer-events-none">
                <div 
-                 className="h-full bg-[#a22bd8] group-hover:bg-[#c333ff] transition-colors" 
-                 style={{ width: `${volume * 100}%` }}
+                 className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-colors" 
+                 style={{ width: `${isMuted ? 0 : volume * 100}%` }}
                />
              </div>
              <div 
                className="absolute w-2.5 h-2.5 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-sm pointer-events-none"
-               style={{ left: `calc(${volume * 100}% - 5px)` }}
+               style={{ left: `calc(${isMuted ? 0 : volume * 100}% - 5px)` }}
              />
              <input 
                type="range"
                min="0"
                max="1"
                step="0.01"
-               value={volume || 0}
-               onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+               value={isMuted ? 0 : volume}
+               onChange={(e) => {
+                 const v = parseFloat(e.target.value);
+                 if (v > 0 && isMuted) setIsMuted(false);
+                 onVolumeChange(v);
+               }}
                className="absolute w-full h-full opacity-0 cursor-pointer m-0"
              />
           </div>
         </div>
-        <button className="hover:text-white transition-colors"><SlidersHorizontal className="w-[18px] h-[18px]" /></button>
-        <button className="hover:text-white transition-colors"><ListMusic className="w-[18px] h-[18px]" /></button>
-        <button className="hover:text-white transition-colors"><Maximize2 className="w-[18px] h-[18px]" /></button>
+        <button onClick={handleDownload} disabled={isDownloading} className="hover:text-white transition-colors relative" title="Download Track">
+          {isDownloading ? <Loader2 className="w-[18px] h-[18px] animate-spin text-fuchsia-400" /> : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          )}
+        </button>
+        <button className="hover:text-white transition-colors" title="EQ"><SlidersHorizontal className="w-[18px] h-[18px]" /></button>
+        <button className="hover:text-white transition-colors" title="Queue"><ListMusic className="w-[18px] h-[18px]" /></button>
+        <button className="hover:text-white transition-colors" title="Full Screen"><Maximize2 className="w-[18px] h-[18px]" /></button>
       </div>
     </div>
   );

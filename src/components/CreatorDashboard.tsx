@@ -147,65 +147,54 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
     e.target.value = '';
   };
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulate multi-step processing and progress
-    let progress = 0;
-    const interval = setInterval(async () => {
-      progress += Math.floor(Math.random() * 15) + 5;
-      if (progress > 100) progress = 100;
-      setUploadProgress(progress);
-
-      if (progress === 100) {
-        clearInterval(interval);
-        
-        // Generate a new Track object
-        const newTrack: Track = {
-          id: `t_${Date.now()}`,
-          title: title,
-          artist: userName,
-          coverUrl: coverPreviewUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
-          duration: audioMetadata ? formatDuration(audioMetadata.duration) : '0:00',
-          audioUrl: audioPreviewUrl || '',
-          genre: genre,
-          plays: 0
-        };
-
-      try {
-        if (onTrackUpload && newTrack.audioUrl) {
-          await Promise.resolve(onTrackUpload(newTrack, { audio: audioFile, cover: coverFile }));
-        }
-
-        setIsUploading(false);
-        setShowUploadModal(false);
-        setShowToast(true);
-        setTitle('');
-        setGenre('');
-        setCoverFile(null);
-        setAudioFile(null);
-        setUploadProgress(0);
-        // Notice: we do not revoke URLs here if they are being used by the player
-        setTimeout(() => setShowToast(false), 4000);
-      } catch (err: any) {
-        setIsUploading(false);
-        const errMsg = err.message || String(err) || '';
-        if (errMsg.includes('Supabase Audio Upload Error') || errMsg.includes('Supabase Cover Upload Error')) {
-           setUploadError(`${errMsg}. Please ensure that your Supabase URL and Anon Key are correct and that the "tracks" bucket exists and is public.`);
-        } else if (errMsg.includes('storage/') || errMsg.includes('unauthorized') || errMsg.includes('retry-limit-exceeded')) {
-           setUploadError(`Upload failed (${errMsg}). If you just created this Firebase project, make sure "Storage" is enabled in your Firebase Console.`);
-        } else if (errMsg.includes('JSON')) {
-           setUploadError(`Storage is not fully initialized. Please go to your Firebase Console, click on "Storage" in the left sidebar, and click "Get Started" to initialize it.`);
-        } else if (errMsg.includes('Missing or insufficient permissions')) {
-           setUploadError(`Database permission denied. Ensure Firestore Rules are deployed and match the app schema.`);
-        } else {
-           setUploadError(errMsg || 'Failed to publish track.');
-        }
+    try {
+      for (let p = 0; p <= 100; p += 20) {
+        setUploadProgress(p);
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
+      
+      const newTrack: Track = {
+        id: `t_${Date.now()}`,
+        title: title,
+        artist: userName,
+        coverUrl: coverPreviewUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
+        duration: audioMetadata ? formatDuration(audioMetadata.duration) : '0:00',
+        audioUrl: audioPreviewUrl || '',
+        genre: genre,
+        plays: 0
+      };
+
+      if (onTrackUpload && newTrack.audioUrl) {
+        await onTrackUpload(newTrack, { audio: audioFile, cover: coverFile });
       }
-    }, 250);
+
+      setIsUploading(false);
+      setShowUploadModal(false);
+      setShowToast(true);
+      setTitle('');
+      setGenre('');
+      setCoverFile(null);
+      setAudioFile(null);
+      setUploadProgress(0);
+      setTimeout(() => setShowToast(false), 4000);
+    } catch (err: any) {
+      setIsUploading(false);
+      const errMsg = err.message || String(err) || '';
+      if (errMsg.includes('storage/') || errMsg.includes('unauthorized') || errMsg.includes('retry-limit-exceeded')) {
+         setUploadError(`Upload failed (${errMsg}). If you just created this Firebase project, make sure "Storage" is enabled in your Firebase Console.`);
+      } else if (errMsg.includes('JSON')) {
+         setUploadError(`Storage is not fully initialized. Please go to your Firebase Console, click on "Storage" in the left sidebar, and click "Get Started" to initialize it.`);
+      } else if (errMsg.includes('Missing or insufficient permissions')) {
+         setUploadError(`Database permission denied. Ensure Firestore Rules are deployed and match the app schema.`);
+      } else {
+         setUploadError(errMsg || 'Failed to publish track.');
+      }
+    }
   };
 
   // Drag events
@@ -270,22 +259,15 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                   
                   <div>
                     <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Primary Genre</label>
-                    <select 
+                    <input 
+                      type="text"
                       required
                       value={genre}
                       onChange={(e) => setGenre(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all font-medium appearance-none"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all font-medium"
+                      placeholder="E.g., Synthwave, Lofi Hip Hop"
                       disabled={isUploading}
-                    >
-                      <option value="" disabled>Select Genre</option>
-                      <option value="Pop">Pop</option>
-                      <option value="Electronic">Electronic</option>
-                      <option value="Hip Hop">Hip Hop</option>
-                      <option value="Rock">Rock</option>
-                      <option value="Ambient">Ambient</option>
-                      <option value="Classical">Classical</option>
-                      <option value="Jazz">Jazz</option>
-                    </select>
+                    />
                   </div>
                   
                   {audioPreviewUrl && (
@@ -444,7 +426,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                 <button 
                   type="submit"
                   disabled={isUploading || !title || !genre || !coverFile || !audioFile || !hasAcceptedTerms}
-                  className="bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-violet-500 text-white px-8 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] flex items-center justify-center min-w-[140px]"
+                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 text-white px-8 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center min-w-[140px]"
                 >
                   {isUploading ? (
                     <div className="flex items-center gap-2">
@@ -467,7 +449,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
         </div>
         <button 
           onClick={() => setShowUploadModal(true)}
-          className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-full font-semibold transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+          className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:scale-105"
         >
           <Upload className="w-5 h-5" />
           Upload Release

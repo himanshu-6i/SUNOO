@@ -108,27 +108,19 @@ async function startServer() {
     }
     try {
       const { prompt } = req.body;
-      const result = await ai.interactions.create({
-        model: "gemini-3.1-pro-preview",
-        input: prompt,
-        generation_config: {
-          thinkingLevel: ThinkingLevel.HIGH
-        }
+      
+      const strictPrompt = `You are Sunoo AI, the virtual assistant for the Sunoo music app. 
+CRITICAL INSTRUCTION: You MUST ONLY answer questions related to the Sunoo app, its music, artists, genres, playlists, or AI music generation within the app. 
+If the user asks about ANYTHING unrelated to the Sunoo app or music, you MUST politely decline to answer and state that you can only answer questions related to the Sunoo app.
+
+User question: ${prompt}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: strictPrompt,
       });
-      let fullOutput = "";
-      let thoughtOutput = "";
-      for (const step of result.steps) {
-        if (step.type === 'thought') {
-            thoughtOutput += step.summary || "(Model reasoning)";
-        }
-        if (step.type === 'model_output') {
-          const textContent = step.content?.find(c => c.type === 'text');
-          if (textContent && textContent.text) {
-            fullOutput += textContent.text;
-          }
-        }
-      }
-      res.json({ output: fullOutput, thoughts: thoughtOutput });
+
+      res.json({ output: response.text, thoughts: "" });
     } catch (error: any) {
       console.error("Thinking chat err:", error);
       res.status(500).json({ error: error.message });

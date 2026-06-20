@@ -16,7 +16,7 @@ interface Message {
 
 export function AIChatModal({ onClose }: AIChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: "Hi! I am the Sunoo AI Assistant. Ask me anything about music, artists, genres, or how to write a good AI music prompt! I'll use deep thinking to give you the best answers." }
+    { id: '1', role: 'assistant', content: "Hi! I am the Sunoo AI Assistant. Ask me anything about our app's music, artists, genres, or AI music generation! (Please note I can only answer questions related to the Sunoo app)." }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +79,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Sunoo AI</h2>
-              <p className="text-[10px] text-zinc-400">Powered by Gemini 3.1 Pro (High Thinking)</p>
+              <p className="text-[10px] text-zinc-400">Powered by Gemini AI</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/5 text-zinc-400">
@@ -100,7 +100,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                     {msg.thoughts}
                   </div>
                 )}
-                <div className={`px-4 py-2.5 rounded-2xl text-[14px] ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-sm' : 'bg-[#18181b] border border-white/5 text-zinc-300 rounded-tl-sm'}`}>
+                <div className={`px-4 py-2.5 rounded-2xl text-[14px] ${msg.role === 'user' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-tr-sm' : 'bg-[#18181b] border border-white/5 text-zinc-300 rounded-tl-sm'}`}>
                    {msg.role === 'user' ? msg.content : (
                      <div className="markdown-body prose prose-invert prose-sm max-w-none">
                        <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -116,7 +116,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                  <Bot className="w-5 h-5 text-violet-400" />
               </div>
               <div className="px-4 py-3 bg-[#18181b] border border-white/5 rounded-2xl rounded-tl-sm text-zinc-500 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" /> Deep thinking...
+                <Loader2 className="w-4 h-4 animate-spin" /> Gathering response...
               </div>
             </div>
           )}
@@ -135,7 +135,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
           <button 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="w-12 h-12 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50 transition-colors shrink-0"
+            className="w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0"
           >
             <Send className="w-5 h-5" />
           </button>

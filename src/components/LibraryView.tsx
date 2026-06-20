@@ -28,25 +28,25 @@ export function LibraryView({ likedTracks, playlists, downloadedTracks, uploaded
        <div className="flex gap-4 mb-8">
          <button 
            onClick={() => setActiveTab('liked')}
-           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-colors text-sm font-medium ${activeTab === 'liked' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-all text-sm font-medium ${activeTab === 'liked' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-white/10 text-white hover:bg-white/20'}`}
          >
            <HeartOff className="w-4 h-4" /> Liked Tracks
          </button>
          <button 
            onClick={() => setActiveTab('playlists')}
-           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-colors text-sm font-medium ${activeTab === 'playlists' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-all text-sm font-medium ${activeTab === 'playlists' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-white/10 text-white hover:bg-white/20'}`}
          >
            <ListMusic className="w-4 h-4" /> Your Playlists
          </button>
          <button 
            onClick={() => setActiveTab('downloaded')}
-           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-colors text-sm font-medium ${activeTab === 'downloaded' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-all text-sm font-medium ${activeTab === 'downloaded' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-white/10 text-white hover:bg-white/20'}`}
          >
            <Download className="w-4 h-4" /> Downloaded
          </button>
          <button 
            onClick={() => setActiveTab('uploaded')}
-           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-colors text-sm font-medium ${activeTab === 'uploaded' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+           className={`px-4 py-2 flex items-center gap-2 rounded-full transition-all text-sm font-medium ${activeTab === 'uploaded' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-white/10 text-white hover:bg-white/20'}`}
          >
            <Upload className="w-4 h-4" /> Uploaded Songs
          </button>

@@ -6,9 +6,11 @@ interface ArtistViewProps {
   artist: Artist;
   tracks: Track[];
   onPlay: (track: Track, queue?: Track[]) => void;
+  isFollowed?: boolean;
+  onToggleFollow?: () => void;
 }
 
-export function ArtistView({ artist, tracks, onPlay }: ArtistViewProps) {
+export function ArtistView({ artist, tracks, onPlay, isFollowed, onToggleFollow }: ArtistViewProps) {
   return (
     <div className="flex-1 overflow-y-auto bg-[#050505] pt-20 custom-scrollbar">
       {/* Header */}
@@ -33,10 +35,17 @@ export function ArtistView({ artist, tracks, onPlay }: ArtistViewProps) {
       <div className="p-8">
         <div className="flex items-center gap-6 mb-8">
           <button 
-            className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center text-black hover:scale-105 hover:bg-emerald-400 transition-all shadow-lg"
+            className="w-14 h-14 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 flex items-center justify-center text-white hover:scale-105 hover:from-violet-500 hover:to-fuchsia-500 transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)]"
             onClick={() => tracks.length > 0 && onPlay(tracks[0], tracks)}
           >
             <Play fill="currentColor" size={28} className="translate-x-0.5" />
+          </button>
+          
+          <button 
+            onClick={onToggleFollow}
+            className={`px-6 py-2 rounded-full font-bold text-sm border hover:scale-105 transition-all ${isFollowed ? 'bg-transparent text-white border-white/50 hover:border-white' : 'bg-transparent text-white border-white hover:bg-white/10'}`}
+          >
+            {isFollowed ? 'Following' : 'Follow'}
           </button>
         </div>
 
@@ -53,11 +62,11 @@ export function ArtistView({ artist, tracks, onPlay }: ArtistViewProps) {
                   onClick={() => onPlay(track, tracks)}
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-zinc-400 w-6 text-right font-mono tabular-nums">{index + 1}</span>
-                    <img src={track.coverUrl} alt={track.title} className="w-12 h-12 rounded object-cover shadow-sm" />
+                    <span className="text-zinc-400 w-6 text-right font-mono tabular-nums group-hover:text-white transition-colors">{index + 1}</span>
+                    <img src={track.coverUrl} alt={track.title} className="w-12 h-12 rounded object-cover shadow-sm group-hover:scale-105 transition-transform" />
                     <div>
-                      <p className="text-white font-medium group-hover:text-emerald-400 transition-colors">{track.title}</p>
-                      <p className="text-sm text-zinc-400">{track.artist}</p>
+                      <p className="text-white font-medium group-hover:text-[#a22bd8] transition-colors">{track.title}</p>
+                      <p className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors">{track.artist}</p>
                     </div>
                   </div>
                   <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity pr-4">

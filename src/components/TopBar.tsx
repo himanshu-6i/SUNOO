@@ -100,7 +100,7 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
           >
             <Bell className="w-[18px] h-[18px]" />
             {unreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#a22bd8] rounded-full border-2 border-black flex items-center justify-center pointer-events-none">
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full border-2 border-black flex items-center justify-center pointer-events-none">
               </div>
             )}
           </button>
@@ -117,7 +117,7 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
                         e.stopPropagation();
                         notifications.forEach(n => !n.read && onMarkNotificationRead(n.id));
                       }}
-                       className="text-[11px] text-[#a22bd8] hover:text-pink-400 flex items-center gap-1 font-medium transition-colors"
+                       className="text-[11px] text-fuchsia-400 hover:text-fuchsia-300 flex items-center gap-1 font-medium transition-colors"
                     >
                       <Check className="w-3 h-3" /> All Read
                     </button>
@@ -131,13 +131,13 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
                   notifications.map(notif => (
                     <div 
                       key={notif.id} 
-                      className={`p-4 border-b border-white/5 flex gap-3 cursor-pointer hover:bg-white/5 transition-colors ${!notif.read ? 'bg-[#a22bd8]/5' : ''}`}
+                      className={`p-4 border-b border-white/5 flex gap-3 cursor-pointer hover:bg-white/5 transition-colors ${!notif.read ? 'bg-violet-500/10' : ''}`}
                       onClick={() => {
                         onMarkNotificationRead(notif.id);
                         setShowNotifications(false);
                       }}
                     >
-                      <div className="w-2 h-2 mt-1.5 rounded-full bg-[#a22bd8] flex-shrink-0" style={{ opacity: notif.read ? 0 : 1 }} />
+                      <div className="w-2 h-2 mt-1.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 flex-shrink-0" style={{ opacity: notif.read ? 0 : 1 }} />
                       <div className="flex-1">
                         <p className={`text-[13px] tracking-tight ${!notif.read ? 'text-white font-semibold' : 'text-zinc-300'}`}>{notif.title}</p>
                         <p className="text-[11px] text-zinc-400 mt-1 leading-snug">{notif.message}</p>

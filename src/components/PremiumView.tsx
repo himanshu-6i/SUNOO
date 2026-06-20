@@ -123,7 +123,7 @@ export function PremiumView({ currentPlan, onSubscribe }: PremiumViewProps) {
                   currentPlan === plan.name
                     ? 'bg-white/10 text-white cursor-not-allowed border border-white/20'
                     : plan.popular 
-                      ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]' 
+                      ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
                       : 'bg-white text-black hover:bg-zinc-200'
                 }`}
               >
@@ -135,7 +135,7 @@ export function PremiumView({ currentPlan, onSubscribe }: PremiumViewProps) {
       </div>
 
       {showToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-violet-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 z-50 animate-in fade-in slide-in-from-bottom-5">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-4 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center gap-4 z-50 animate-in fade-in slide-in-from-bottom-5">
           <Sparkles className="w-5 h-5 text-violet-200" />
           <div>
             <p className="font-bold">Welcome to {showToast}!</p>

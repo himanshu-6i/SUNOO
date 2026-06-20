@@ -54,7 +54,7 @@ export function AddToPlaylistModal({ track, playlists, onClose, onCreatePlaylist
                 <button type="button" onClick={() => setIsCreating(false)} className="flex-1 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={!newPlaylistName.trim()} className="flex-1 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer">
+                <button type="submit" disabled={!newPlaylistName.trim()} className="flex-1 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] cursor-pointer">
                   Create & Add
                 </button>
               </div>

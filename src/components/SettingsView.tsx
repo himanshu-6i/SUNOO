@@ -241,7 +241,7 @@ export function SettingsView({ currentPlan }: SettingsViewProps) {
                 {currentPlan === 'Free' && (
                   <button 
                     onClick={() => showToast('Redirecting to checkout for Premium upgrade...')}
-                    className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-transform"
+                    className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)]"
                   >
                     Upgrade to Premium
                   </button>
@@ -277,7 +277,7 @@ export function SettingsView({ currentPlan }: SettingsViewProps) {
         </div>
       </div>
       {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-violet-600 text-white px-6 py-3 rounded-full shadow-lg font-medium animate-in fade-in slide-in-from-bottom-4 z-50">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-3 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] font-medium animate-in fade-in slide-in-from-bottom-4 z-50">
           {toastMessage}
         </div>
       )}

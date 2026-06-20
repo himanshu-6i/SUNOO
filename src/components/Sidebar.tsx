@@ -1,4 +1,5 @@
-import { Home, Search, Library, LayoutDashboard, PlusCircle, Heart, Grid, Music, Target, UploadCloud, Compass, Scissors, Crown } from 'lucide-react';
+import { useState } from 'react';
+import { Home, Search, Library, LayoutDashboard, PlusCircle, Heart, Grid, Music, Target, UploadCloud, Compass, Scissors, Crown, Users } from 'lucide-react';
 import { ViewState, Artist } from '../types';
 import { SunooLogo } from './SunooLogo';
 
@@ -8,9 +9,12 @@ interface SidebarProps {
   subscriptionPlan: string;
   popularArtists?: Artist[];
   onArtistClick?: (artist: Artist) => void;
+  onNewPlaylist?: () => void;
 }
 
-export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists = [], onArtistClick }: SidebarProps) {
+export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists = [], onArtistClick, onNewPlaylist }: SidebarProps) {
+  const [showAllArtists, setShowAllArtists] = useState(false);
+  
   const navItems = [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'search', icon: Search, label: 'Search' },
@@ -25,6 +29,7 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
 
   const playlists = [
     { id: 'liked', icon: Heart, label: 'Liked Songs' },
+    { id: 'followed-artists', icon: Users, label: 'Followed Artists' },
     { id: 'my-ai', icon: Grid, label: 'My AI Creations' },
     { id: 'chill', icon: Music, label: 'Chill Vibes' },
     { id: 'workout', icon: Target, label: 'Workout Mix' },
@@ -49,12 +54,12 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
               onClick={() => setView(item.id as ViewState)}
               className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 font-medium relative overflow-hidden ${
                 currentView === item.id 
-                  ? 'bg-gradient-to-r from-pink-500/20 to-[#120622] text-white' 
+                  ? 'bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white' 
                   : 'text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
               {currentView === item.id && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.8)]" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-600 to-fuchsia-600 shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
               )}
               <item.icon className="w-5 h-5 flex-shrink-0" />
               {item.label}
@@ -71,19 +76,19 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
                 onClick={() => setView(item.id === 'upload' ? 'creator' : item.id)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 font-medium relative overflow-hidden ${
                   currentView === item.id 
-                    ? 'bg-gradient-to-r from-pink-500/20 to-[#120622] text-white' 
+                    ? 'bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white' 
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {currentView === item.id && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.8)]" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-600 to-fuchsia-600 shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
                 )}
                 <div className="flex items-center gap-4">
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className="bg-[#a22bd8] text-[10px] text-white px-2 py-0.5 rounded font-bold tracking-wide ml-2 whitespace-nowrap">
+                  <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-[10px] text-white px-2 py-0.5 rounded font-bold tracking-wide ml-2 whitespace-nowrap">
                     {item.badge}
                   </span>
                 )}
@@ -98,10 +103,22 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
              {playlists.map((item) => (
               <button
                 key={item.id}
-                className={`w-full flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-all duration-300 font-medium ${
-                  item.isAction ? 'text-zinc-300 mt-2 hover:text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                onClick={() => {
+                  if (item.id === 'new-playlist') {
+                    if (onNewPlaylist) onNewPlaylist();
+                  } else {
+                    setView(item.id);
+                  }
+                }}
+                 className={`w-full flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-all duration-300 font-medium relative overflow-hidden ${
+                  currentView === item.id || (item.id === 'liked' && currentView === 'library')
+                    ? 'bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white'
+                    : item.isAction ? 'text-zinc-300 mt-2 hover:text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
+                {currentView === item.id && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-600 to-fuchsia-600 shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                )}
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
               </button>
@@ -118,7 +135,7 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
              <p className="text-[13px] text-zinc-400 mb-4 leading-snug">Unlock high quality audio, offline listening & more.</p>
              <button 
                onClick={() => setView('premium')}
-               className="w-full bg-gradient-to-r from-[#a22bd8] via-[#e24e5b] to-[#f47f4d] text-white text-sm font-bold py-2.5 rounded-full hover:opacity-90 transition-opacity"
+               className="w-full bg-gradient-to-r from-[#a22bd8] via-[#e24e5b] to-[#f47f4d] text-white text-sm font-bold py-2.5 rounded-full transition-all shadow-[0_0_15px_rgba(226,78,91,0.4)] hover:opacity-90"
              >
                Upgrade Now
              </button>
@@ -128,14 +145,18 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
         <div className="pt-2 pb-6">
           <div className="flex items-center justify-between px-4 mb-4">
             <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Popular Artists</p>
-            <span className="text-[11px] text-zinc-400 hover:text-white cursor-pointer">View all</span>
+            {popularArtists.length > 5 && (
+              <span className="text-[11px] text-zinc-400 hover:text-white cursor-pointer transition-colors" onClick={() => setShowAllArtists(!showAllArtists)}>
+                {showAllArtists ? 'Show less' : 'View all'}
+              </span>
+            )}
           </div>
           <div className="flex flex-col gap-1 px-2">
-             {popularArtists.slice(0, 5).map(artist => (
+             {(showAllArtists ? popularArtists : popularArtists.slice(0, 5)).map(artist => (
                <div key={artist.id} className="flex items-center gap-3 cursor-pointer group p-2 rounded-xl hover:bg-white/5 transition-colors" onClick={() => onArtistClick?.(artist)}>
                   <img src={artist.imageUrl} alt={artist.name} className="w-10 h-10 rounded-full object-cover group-hover:scale-105 transition-transform" />
                   <div className="flex flex-col overflow-hidden">
-                    <span className="text-[13px] font-medium text-zinc-300 group-hover:text-white transition-colors truncate">{artist.name}</span>
+                    <span className="text-[13px] font-medium text-zinc-300 group-hover:text-fuchsia-400 transition-colors truncate">{artist.name}</span>
                     <span className="text-[11px] text-zinc-500">Artist</span>
                   </div>
                </div>

@@ -146,10 +146,10 @@ export function LoginView({ onLogin }: LoginViewProps) {
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full bg-white text-black font-bold rounded-xl py-3.5 mt-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2 group"
+              className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-xl py-3.5 mt-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2 group shadow-[0_0_20px_rgba(168,85,247,0.4)]"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-black border-r-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white border-r-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   {isSignUp ? 'Sign Up' : 'Sign In'}

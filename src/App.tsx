@@ -11,16 +11,19 @@ import { PremiumView } from './components/PremiumView';
 import { ProfileView } from './components/ProfileView';
 import { SettingsView } from './components/SettingsView';
 import { AddToPlaylistModal } from './components/AddToPlaylistModal';
+import { CreatePlaylistModal } from './components/CreatePlaylistModal';
+import { UpdatingSoonView } from './components/UpdatingSoonView';
 import { AIGeneratorModal } from './components/AIGeneratorModal';
 import { AIChatModal } from './components/AIChatModal';
 import { ArtistView } from './components/ArtistView';
+import { FollowedArtistsView } from './components/FollowedArtistsView';
+import { GenrePlaylistView } from './components/GenrePlaylistView';
 import { ViewState, Track, Notification, Playlist, Artist } from './types';
 import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser, popularArtists } from './data';
 import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, listAll, deleteObject, getDownloadURL, uploadBytes } from 'firebase/storage';
-import { supabase } from './supabase';
 
 export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
@@ -37,11 +40,36 @@ export default function App() {
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [downloadedTracks, setDownloadedTracks] = useState<Track[]>([]);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false);
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
   const [isAiChatModalOpen, setIsAiChatModalOpen] = useState(false);
   const [trackToAddToPlaylist, setTrackToAddToPlaylist] = useState<Track | null>(null);
   
   const [allTracks, setAllTracks] = useState<Track[]>(trendingTracks);
+  const [followedArtistIds, setFollowedArtistIds] = useState<Set<string>>(new Set());
+  
+  const dynamicUserPlaylists = useMemo(() => {
+    return userPlaylists.map(playlist => {
+      const pTitle = playlist.title.toLowerCase();
+      const matchedTracks = allTracks.filter(t => 
+        t.genre?.toLowerCase() === pTitle ||
+        t.title.toLowerCase().includes(pTitle) ||
+        t.artist?.toLowerCase() === pTitle
+      );
+      
+      const combinedTracks = [...playlist.tracks];
+      matchedTracks.forEach(mt => {
+        if (!combinedTracks.some(t => t.id === mt.id)) {
+          combinedTracks.push(mt);
+        }
+      });
+      return {
+        ...playlist,
+        tracks: combinedTracks,
+        coverUrl: playlist.coverUrl !== 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80' ? playlist.coverUrl : (combinedTracks[0]?.coverUrl || playlist.coverUrl)
+      };
+    });
+  }, [userPlaylists, allTracks]);
   const [queue, setQueue] = useState<Track[]>(allTracks);
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentTrack = queue[currentIndex] || null;
@@ -63,19 +91,30 @@ export default function App() {
       artistsMap.set(artist.name, artist);
     });
 
+    // Get user info
+    const sessionUserName = sessionUser?.displayName || mockUser.name;
+    const sessionUserPhoto = sessionUser?.photoURL || mockUser.avatarUrl;
+
     // Add unique artists from tracking uploads
     allTracks.forEach(track => {
       if (track.artist && !artistsMap.has(track.artist)) {
+        let imageUrl = track.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
+        
+        // If the artist is the current user (by name or ownerId), use their profile photo instead of the track cover
+        if (track.artist === sessionUserName || track.ownerId === sessionUser?.uid) {
+           imageUrl = sessionUserPhoto || imageUrl;
+        }
+
         artistsMap.set(track.artist, {
           id: `dyn_${track.artist.replace(/\s+/g, '').toLowerCase()}`,
           name: track.artist,
-          imageUrl: track.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80'
+          imageUrl: imageUrl
         });
       }
     });
 
     return Array.from(artistsMap.values());
-  }, [allTracks]);
+  }, [allTracks, sessionUser]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -83,10 +122,21 @@ export default function App() {
   useEffect(() => {
     if (audioRef.current && currentTrack) {
       const audio = audioRef.current;
-      const willSourceChange = audio.src !== currentTrack.audioUrl && currentTrack.audioUrl;
+      
+      if (!currentTrack.audioUrl) {
+        console.warn("Track has no audioUrl");
+        setIsPlaying(false);
+        return;
+      }
+
+      // Check if URL actually changed by converting to absolute just in case
+      const currentUrlStr = audio.src || '';
+      // We do endsWith or construct proper object just to be robust
+      const willSourceChange = !currentUrlStr.endsWith(currentTrack.audioUrl);
       
       if (willSourceChange) {
         audio.src = currentTrack.audioUrl;
+        audio.load(); // sometimes required when changing src programmatically
       }
       
       if (isPlaying) {
@@ -94,7 +144,9 @@ export default function App() {
         if (playPromise !== undefined) {
           playPromise.catch(err => {
             if (err.name !== 'AbortError') {
-              console.error("Playback prevented:", err);
+              console.warn("Playback prevented:", err.message);
+              // Wait for user interaction
+              setIsPlaying(false);
             }
           });
         }
@@ -305,6 +357,15 @@ export default function App() {
     });
   };
 
+  const toggleFollowArtist = (artistId: string) => {
+    setFollowedArtistIds(prev => {
+      const next = new Set(prev);
+      if (next.has(artistId)) next.delete(artistId);
+      else next.add(artistId);
+      return next;
+    });
+  };
+
   const handleMarkNotificationRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
@@ -346,24 +407,20 @@ export default function App() {
 
       if (files?.audio) {
         const safeName = files.audio.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-        const audioPath = `audio_${Date.now()}_${safeName}`;
+        const audioPath = `tracks/audio_${Date.now()}_${safeName}`;
         
-        const { error: audioError } = await supabase.storage.from('tracks').upload(audioPath, files.audio);
-        if (audioError) throw new Error(`Supabase Audio Upload Error: ${audioError.message}`);
-        
-        const { data: { publicUrl: audioUrl } } = supabase.storage.from('tracks').getPublicUrl(audioPath);
-        audioDownloadUrl = audioUrl;
+        const storageRef = ref(storage, audioPath);
+        await uploadBytes(storageRef, files.audio);
+        audioDownloadUrl = await getDownloadURL(storageRef);
       }
 
       if (files?.cover) {
         const safeName = files.cover.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-        const coverPath = `cover_${Date.now()}_${safeName}`;
+        const coverPath = `tracks/cover_${Date.now()}_${safeName}`;
         
-        const { error: coverError } = await supabase.storage.from('tracks').upload(coverPath, files.cover);
-        if (coverError) throw new Error(`Supabase Cover Upload Error: ${coverError.message}`);
-        
-        const { data: { publicUrl: coverUrl } } = supabase.storage.from('tracks').getPublicUrl(coverPath);
-        coverDownloadUrl = coverUrl;
+        const storageRef = ref(storage, coverPath);
+        await uploadBytes(storageRef, files.cover);
+        coverDownloadUrl = await getDownloadURL(storageRef);
       }
       
       const dbTrack = {
@@ -417,6 +474,18 @@ export default function App() {
     } catch (error) {
       console.error("Failed to save AI generated track:", error);
     }
+  };
+
+  const handleCreateEmptyPlaylist = (name: string) => {
+    const newPlaylist: Playlist = {
+      id: `p_${Date.now()}`,
+      title: name,
+      creator: 'You',
+      coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
+      tracks: []
+    };
+    setUserPlaylists(prev => [...prev, newPlaylist]);
+    setIsCreatePlaylistModalOpen(false);
   };
 
   const handleCreatePlaylist = (name: string, firstTrack: Track) => {
@@ -483,13 +552,19 @@ export default function App() {
       setIsAiChatModalOpen(true);
       return;
     }
-    if (history[historyIndex] !== view) {
+    
+    let targetView = view;
+    if (view === 'liked') {
+      targetView = 'library:liked';
+    }
+
+    if (history[historyIndex] !== targetView) {
       const newHistory = history.slice(0, historyIndex + 1);
-      newHistory.push(view);
+      newHistory.push(targetView);
       setHistory(newHistory);
       setHistoryIndex(newHistory.length - 1);
     }
-    applyView(view);
+    applyView(targetView);
   };
 
   const goBack = () => {
@@ -536,24 +611,41 @@ export default function App() {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'home':
+      case 'home': {
+        const liked = allTracks.filter(t => likedTrackIds.has(t.id));
+        const newReleases = [...allTracks].reverse().slice(0, 5); // Just a simulation of new releases
         return <HomeFeed 
                  trending={allTracks} 
                  aiPlaylists={aiPlaylists} 
                  recentlyPlayed={recentlyPlayed} 
                  popularArtists={dynamicArtists}
+                 newReleases={newReleases}
+                 likedTracks={liked}
                  onPlay={handlePlayTrack} 
                  onSaveMix={handleSaveMix} 
-                 isMixSaved={userPlaylists.some(p => p.title === 'Your Evening Flow')} 
+                 isMixSaved={dynamicUserPlaylists.some(p => p.title === 'Your Evening Flow')} 
                  onArtistClick={handleArtistClick}
                  onGenerateClick={() => setIsGeneratorModalOpen(true)}
+                 onNavigate={handleNavigate}
                />;
+      }
       case 'artist':
         if (selectedArtist) {
           const artistTracks = allTracks.filter(t => t.artist === selectedArtist.name);
-          return <ArtistView artist={selectedArtist} tracks={artistTracks} onPlay={handlePlayTrack} />;
+          return <ArtistView 
+                   artist={selectedArtist} 
+                   tracks={artistTracks} 
+                   onPlay={handlePlayTrack} 
+                   isFollowed={followedArtistIds.has(selectedArtist.id)}
+                   onToggleFollow={() => toggleFollowArtist(selectedArtist.id)}
+                 />;
         }
         return null;
+      case 'followed-artists':
+        const followedArtists = dynamicArtists.filter(a => followedArtistIds.has(a.id));
+        return <FollowedArtistsView artists={followedArtists} onArtistClick={handleArtistClick} />;
+      case 'my-ai':
+        return <UpdatingSoonView />;
       case 'creator':
         return <CreatorDashboard tracks={allTracks} onPlay={handlePlayTrack} onTrackUpload={handleTrackUpload} />;
       case 'search':
@@ -564,7 +656,7 @@ export default function App() {
         const userName = sessionUser?.displayName || mockUser.name;
         const isAdmin = sessionUser?.email === 'hm5080408@gmail.com';
         const uploaded = allTracks.filter(t => t.ownerId === currentUid || isAdmin || (currentUid ? false : t.artist === userName));
-        return <LibraryView likedTracks={liked} playlists={userPlaylists} downloadedTracks={downloadedTracks} uploadedTracks={uploaded} onPlay={handlePlayTrack} onRemoveLike={toggleLike} onPlayPlaylist={(p) => handlePlayTrack(p.tracks[0], p.tracks)} defaultTab={libraryTab} onDeleteTrack={handleDeleteTrack} />;
+        return <LibraryView likedTracks={liked} playlists={dynamicUserPlaylists} downloadedTracks={downloadedTracks} uploadedTracks={uploaded} onPlay={handlePlayTrack} onRemoveLike={toggleLike} onPlayPlaylist={(p) => handlePlayTrack(p.tracks[0], p.tracks)} defaultTab={libraryTab} onDeleteTrack={handleDeleteTrack} />;
       }
       case 'premium':
         return <PremiumView currentPlan={subscriptionPlan} onSubscribe={setSubscriptionPlan} />;
@@ -572,6 +664,44 @@ export default function App() {
         return <ProfileView tracks={allTracks} recentlyPlayed={recentlyPlayed} onNavigate={handleNavigate} onPlay={handlePlayTrack} />;
       case 'settings':
         return <SettingsView currentPlan={subscriptionPlan} />;
+      case 'chill':
+      case 'workout':
+      case 'focus': {
+        let title = '';
+        let description = '';
+        let filterGenres: string[] = [];
+        
+        if (currentView === 'chill') {
+          title = 'Chill Vibes';
+          description = 'Relax, kick back, and enjoy these chill beats.';
+          filterGenres = ['Chill', 'Ambient', 'Lofi Hip Hop', 'Jazz'];
+        } else if (currentView === 'workout') {
+          title = 'Workout Mix';
+          description = 'High energy tracks to push your limits.';
+          filterGenres = ['Workout', 'Electronic', 'Pop', 'Rock', 'Hip Hop'];
+        } else {
+          title = 'Focus Flow';
+          description = 'Deep focus music for study and work.';
+          filterGenres = ['Focus', 'Classical', 'Ambient', 'Electronic'];
+        }
+
+        const genreTracks = allTracks.filter(t => 
+           filterGenres.some(g => t.genre?.toLowerCase().includes(g.toLowerCase())) || 
+           t.genre?.toLowerCase().includes(currentView.toLowerCase())
+        );
+
+        return (
+          <GenrePlaylistView 
+            id={currentView} 
+            title={title} 
+            description={description} 
+            tracks={genreTracks} 
+            onPlay={handlePlayTrack} 
+            playingTrackId={currentTrack?.id} 
+            isPlaying={isPlaying} 
+          />
+        );
+      }
       default:
         return (
           <div className="flex-1 flex items-center justify-center text-zinc-500 pb-32">
@@ -590,9 +720,20 @@ export default function App() {
         onTimeUpdate={handleTimeUpdate} 
         onLoadedMetadata={handleTimeUpdate}
         onEnded={handleEnded}
+        onError={(e) => {
+          console.warn("Audio element error:", e.currentTarget.error);
+          setIsPlaying(false);
+        }}
         playsInline
       />
-      <Sidebar currentView={currentView} setView={handleNavigate} subscriptionPlan={subscriptionPlan} popularArtists={dynamicArtists} onArtistClick={handleArtistClick} />
+      <Sidebar 
+        currentView={currentView} 
+        setView={handleNavigate} 
+        subscriptionPlan={subscriptionPlan} 
+        popularArtists={dynamicArtists} 
+        onArtistClick={handleArtistClick} 
+        onNewPlaylist={() => setIsCreatePlaylistModalOpen(true)}
+      />
       <main className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden min-w-0">
         <TopBar 
           searchQuery={searchQuery} 
@@ -641,13 +782,19 @@ export default function App() {
       {isPlaylistModalOpen && trackToAddToPlaylist && (
         <AddToPlaylistModal 
           track={trackToAddToPlaylist}
-          playlists={userPlaylists}
+          playlists={dynamicUserPlaylists}
           onClose={() => {
             setIsPlaylistModalOpen(false);
             setTrackToAddToPlaylist(null);
           }}
           onCreatePlaylist={handleCreatePlaylist}
           onAddToPlaylist={handleAddToPlaylist}
+        />
+      )}
+      {isCreatePlaylistModalOpen && (
+        <CreatePlaylistModal 
+          onClose={() => setIsCreatePlaylistModalOpen(false)}
+          onCreate={handleCreateEmptyPlaylist}
         />
       )}
       {isGeneratorModalOpen && (

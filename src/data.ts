@@ -40,7 +40,7 @@ export const trendingTracks: Track[] = [
     artist: 'AI Genesis',
     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
     duration: '3:24',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/131011_02_J_S_Bach_The_Well_Tempered_Clavier_Book_1_Prelude_and_Fugue_1_in_C_Major_BWV_846.ogg',
     genre: 'Electronic',
     plays: 2100000
   },
@@ -50,7 +50,7 @@ export const trendingTracks: Track[] = [
     artist: 'Luna Eclipse',
     coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80',
     duration: '3:12',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/30/J_S_Bach_The_Well_Tempered_Clavier_Book_1_No_2_Prelude_in_C_Minor_BWV_847.ogg',
     genre: 'Pop',
     plays: 1800000
   },
@@ -60,7 +60,7 @@ export const trendingTracks: Track[] = [
     artist: 'The Wanderers',
     coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80',
     duration: '3:45',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/77/J._S._Bach%2C_WTC_Book_1%2C_Fugue_2_in_C_Minor%2C_BWV_847.ogg',
     genre: 'Electronic',
     plays: 1500000
   },
@@ -70,7 +70,7 @@ export const trendingTracks: Track[] = [
     artist: 'Synthwave Specter',
     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
     duration: '3:28',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1e/J._S._Bach%2C_WTC_Book_1%2C_Prelude_3_in_C-Sharp_Major%2C_BWV_848.ogg',
     genre: 'Pop',
     plays: 1200000
   },
@@ -80,7 +80,7 @@ export const trendingTracks: Track[] = [
     artist: 'AI Genesis',
     coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80',
     duration: '3:36',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/52/J._S._Bach%2C_WTC_Book_1%2C_Fugue_3_in_C-Sharp_Major%2C_BWV_848.ogg',
     genre: 'Pop',
     plays: 980000
   }

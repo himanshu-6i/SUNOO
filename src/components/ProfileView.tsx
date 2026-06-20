@@ -151,7 +151,7 @@ export function ProfileView({ tracks, recentlyPlayed, onNavigate, onPlay }: Prof
               <h3 className="text-lg font-bold text-white mb-2">Creator Features</h3>
               <button 
                 onClick={() => onNavigate?.('creator')}
-                className="w-full flex items-center gap-3 bg-violet-600 hover:bg-violet-500 text-white p-4 rounded-xl transition-colors font-medium shadow-[0_0_20px_rgba(139,92,246,0.2)]"
+                className="w-full flex items-center gap-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white p-4 rounded-xl transition-all font-medium shadow-[0_0_20px_rgba(168,85,247,0.3)]"
               >
                 <LayoutDashboard className="w-5 h-5" />
                 Artist Dashboard

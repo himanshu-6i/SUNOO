@@ -45,4 +45,4 @@ export interface Artist {
   imageUrl: string;
 }
 
-export type ViewState = 'home' | 'search' | 'library' | 'creator' | 'premium' | 'profile' | 'settings' | 'artist';
+export type ViewState = 'home' | 'search' | 'library' | 'creator' | 'premium' | 'profile' | 'settings' | 'artist' | 'chill' | 'workout' | 'focus';
