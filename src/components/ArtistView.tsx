@@ -10,9 +10,9 @@ interface ArtistViewProps {
 
 export function ArtistView({ artist, tracks, onPlay }: ArtistViewProps) {
   return (
-    <div className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-[#121212] pt-20 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto bg-[#050505] pt-20 custom-scrollbar">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center md:items-end gap-6 px-8 pb-8 pt-12 bg-gradient-to-t from-black/50 to-transparent">
+      <div className="flex flex-col md:flex-row items-center md:items-end gap-6 px-8 pb-8 pt-12 bg-gradient-to-t from-black/50 to-[#1a0b2e]/50">
         <img 
           src={artist.imageUrl} 
           alt={artist.name} 

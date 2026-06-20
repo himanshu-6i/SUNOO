@@ -36,69 +36,69 @@ export const initialNotifications: Notification[] = [
 export const trendingTracks: Track[] = [
   {
     id: 't1',
-    title: 'Neon Nights',
-    artist: 'Synthwave Specter',
+    title: 'Echoes of Tomorrow',
+    artist: 'AI Genesis',
     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
-    duration: '6:12',
+    duration: '3:24',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     genre: 'Electronic',
-    plays: 1250300
+    plays: 2100000
   },
   {
     id: 't2',
     title: 'Midnight Drive',
     artist: 'Luna Eclipse',
     coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80',
-    duration: '7:01',
+    duration: '3:12',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
     genre: 'Pop',
-    plays: 890400
+    plays: 1800000
   },
   {
     id: 't3',
-    title: 'Echoes of You',
+    title: 'Digital Dreams',
     artist: 'The Wanderers',
     coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80',
-    duration: '5:44',
+    duration: '3:45',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    genre: 'Indie',
-    plays: 450100
+    genre: 'Electronic',
+    plays: 1500000
   },
   {
     id: 't4',
-    title: 'Quantum Lullaby',
-    artist: 'AI Genesis',
-    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80',
-    duration: '5:02',
+    title: 'Neon Nights',
+    artist: 'Synthwave Specter',
+    coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
+    duration: '3:28',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    genre: 'Ambient',
-    plays: 2100000
+    genre: 'Pop',
+    plays: 1200000
   },
   {
     id: 't5',
-    title: 'Urban Jungle',
-    artist: 'Metro Flow',
-    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80',
-    duration: '6:12',
+    title: 'Lost in Algorithms',
+    artist: 'AI Genesis',
+    coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80',
+    duration: '3:36',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    genre: 'Hip Hop',
-    plays: 1805000
+    genre: 'Pop',
+    plays: 980000
   }
 ];
 
 export const popularArtists: Artist[] = [
-  { id: 'a1', name: 'Arijit Singh', imageUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a2', name: 'Alan Walker', imageUrl: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a3', name: 'Vishal Mishra', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a4', name: 'Pritam', imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a5', name: 'Anirudh', imageUrl: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a6', name: 'Shreya Ghoshal', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' }
+  { id: 'a1', name: 'AI Genesis', imageUrl: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a2', name: 'The Wanderers', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a3', name: 'Luna Eclipse', imageUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a4', name: 'Synthwave Specter', imageUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a5', name: 'Metro Flow', imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80' },
+  { id: 'a6', name: 'Digital Karma', imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80' }
 ];
 
 export const aiPlaylists: Playlist[] = [
   {
     id: 'p1',
-    title: 'Deep Focus (AI Curated)',
+    title: 'Deep Focus',
     creator: 'SUNOO AI',
     coverUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=300&q=80',
     tracks: [trendingTracks[3], trendingTracks[0]]
@@ -109,5 +109,19 @@ export const aiPlaylists: Playlist[] = [
     creator: 'SUNOO AI',
     coverUrl: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=300&q=80',
     tracks: [trendingTracks[1], trendingTracks[4], trendingTracks[2]]
+  },
+  {
+    id: 'p3',
+    title: 'Chill AI Vibes',
+    creator: 'SUNOO AI',
+    coverUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80',
+    tracks: [trendingTracks[2], trendingTracks[3]]
+  },
+  {
+    id: 'p4',
+    title: 'Late Night Thoughts',
+    creator: 'SUNOO AI',
+    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80',
+    tracks: [trendingTracks[4], trendingTracks[0]]
   }
 ];

@@ -11,6 +11,8 @@ import { PremiumView } from './components/PremiumView';
 import { ProfileView } from './components/ProfileView';
 import { SettingsView } from './components/SettingsView';
 import { AddToPlaylistModal } from './components/AddToPlaylistModal';
+import { AIGeneratorModal } from './components/AIGeneratorModal';
+import { AIChatModal } from './components/AIChatModal';
 import { ArtistView } from './components/ArtistView';
 import { ViewState, Track, Notification, Playlist, Artist } from './types';
 import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser, popularArtists } from './data';
@@ -35,6 +37,8 @@ export default function App() {
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [downloadedTracks, setDownloadedTracks] = useState<Track[]>([]);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
+  const [isAiChatModalOpen, setIsAiChatModalOpen] = useState(false);
   const [trackToAddToPlaylist, setTrackToAddToPlaylist] = useState<Track | null>(null);
   
   const [allTracks, setAllTracks] = useState<Track[]>(trendingTracks);
@@ -396,6 +400,25 @@ export default function App() {
     }
   };
 
+  const handleAITrackGenerated = async (newTrack: Track, audioBase64: string, mimeType: string) => {
+    try {
+      // Decode base64 to File
+      const byteCharacters = atob(audioBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const file = new File([blob], `ai_music_${Date.now()}.wav`, { type: mimeType });
+      
+      // Upload via the existing handleTrackUpload
+      await handleTrackUpload(newTrack, { audio: file, cover: null });
+    } catch (error) {
+      console.error("Failed to save AI generated track:", error);
+    }
+  };
+
   const handleCreatePlaylist = (name: string, firstTrack: Track) => {
     const newPlaylist: Playlist = {
       id: `p_${Date.now()}`,
@@ -452,6 +475,14 @@ export default function App() {
   };
 
   const handleNavigate = (view: string) => {
+    if (view === 'ai-generator') {
+      setIsGeneratorModalOpen(true);
+      return;
+    }
+    if (view === 'ai-chat') {
+      setIsAiChatModalOpen(true);
+      return;
+    }
     if (history[historyIndex] !== view) {
       const newHistory = history.slice(0, historyIndex + 1);
       newHistory.push(view);
@@ -515,6 +546,7 @@ export default function App() {
                  onSaveMix={handleSaveMix} 
                  isMixSaved={userPlaylists.some(p => p.title === 'Your Evening Flow')} 
                  onArtistClick={handleArtistClick}
+                 onGenerateClick={() => setIsGeneratorModalOpen(true)}
                />;
       case 'artist':
         if (selectedArtist) {
@@ -561,7 +593,7 @@ export default function App() {
         playsInline
       />
       <Sidebar currentView={currentView} setView={handleNavigate} subscriptionPlan={subscriptionPlan} popularArtists={dynamicArtists} onArtistClick={handleArtistClick} />
-      <main className="flex-1 flex flex-col relative bg-[#121212] overflow-hidden min-w-0">
+      <main className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden min-w-0">
         <TopBar 
           searchQuery={searchQuery} 
           onSearchChange={handleSearchChange}
@@ -573,6 +605,7 @@ export default function App() {
           onForward={goForward}
           canGoBack={historyIndex > 0}
           canGoForward={historyIndex < history.length - 1}
+          onOpenAIChat={() => setIsAiChatModalOpen(true)}
         />
         {renderContent()}
       </main>
@@ -616,6 +649,15 @@ export default function App() {
           onCreatePlaylist={handleCreatePlaylist}
           onAddToPlaylist={handleAddToPlaylist}
         />
+      )}
+      {isGeneratorModalOpen && (
+        <AIGeneratorModal 
+          onClose={() => setIsGeneratorModalOpen(false)}
+          onTrackGenerated={handleAITrackGenerated}
+        />
+      )}
+      {isAiChatModalOpen && (
+        <AIChatModal onClose={() => setIsAiChatModalOpen(false)} />
       )}
     </div>
   );
