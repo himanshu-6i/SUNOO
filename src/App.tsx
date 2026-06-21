@@ -24,6 +24,7 @@ import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { ref, listAll, deleteObject, getDownloadURL, uploadBytes } from 'firebase/storage';
+import { supabase } from './supabase';
 
 export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
@@ -427,18 +428,40 @@ export default function App() {
         const safeName = files.audio.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
         const audioPath = `tracks/audio_${Date.now()}_${safeName}`;
         
-        const storageRef = ref(storage, audioPath);
-        await uploadBytes(storageRef, files.audio);
-        audioDownloadUrl = await getDownloadURL(storageRef);
+        const { data, error } = await supabase.storage
+          .from('assets')
+          .upload(audioPath, files.audio);
+          
+        if (error) {
+          console.error("Audio upload error:", error);
+          throw error;
+        }
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('assets')
+          .getPublicUrl(audioPath);
+          
+        audioDownloadUrl = publicUrlData.publicUrl;
       }
 
       if (files?.cover) {
         const safeName = files.cover.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
         const coverPath = `tracks/cover_${Date.now()}_${safeName}`;
         
-        const storageRef = ref(storage, coverPath);
-        await uploadBytes(storageRef, files.cover);
-        coverDownloadUrl = await getDownloadURL(storageRef);
+        const { data, error } = await supabase.storage
+          .from('assets')
+          .upload(coverPath, files.cover);
+          
+        if (error) {
+          console.error("Cover upload error:", error);
+          throw error;
+        }
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('assets')
+          .getPublicUrl(coverPath);
+          
+        coverDownloadUrl = publicUrlData.publicUrl;
       }
       
       const dbTrack = {
