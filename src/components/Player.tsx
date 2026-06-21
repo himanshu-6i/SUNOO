@@ -10,6 +10,8 @@ interface PlayerProps {
   duration: string;
   volume: number;
   isLiked: boolean;
+  isShuffle: boolean;
+  isRepeat: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
   onPrev: () => void;
@@ -18,12 +20,15 @@ interface PlayerProps {
   onToggleLike: () => void;
   onAddToPlaylist?: () => void;
   onDownload?: (track: Track) => void;
+  onToggleShuffle: () => void;
+  onToggleRepeat: () => void;
+  onToggleQueue?: () => void;
+  onToggleFullscreen?: () => void;
+  onToggleEQ?: () => void;
 }
 
-export function Player({ currentTrack, isPlaying, progress, currentTime, duration, volume, isLiked, onTogglePlay, onNext, onPrev, onSeek, onVolumeChange, onToggleLike, onAddToPlaylist, onDownload }: PlayerProps) {
+export function Player({ currentTrack, isPlaying, progress, currentTime, duration, volume, isLiked, isShuffle, isRepeat, onTogglePlay, onNext, onPrev, onSeek, onVolumeChange, onToggleLike, onAddToPlaylist, onDownload, onToggleShuffle, onToggleRepeat, onToggleQueue, onToggleFullscreen, onToggleEQ }: PlayerProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
   if (!currentTrack) return null;
@@ -87,7 +92,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
       {/* Main Controls */}
       <div className="flex flex-col items-center max-w-[600px] w-2/4 gap-2">
         <div className="flex items-center gap-6">
-          <button onClick={() => setIsShuffle(!isShuffle)} className={`${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
+          <button onClick={onToggleShuffle} className={`${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Shuffle className="w-4 h-4" />
           </button>
           <button onClick={onPrev} className="text-zinc-400 hover:text-white transition-colors">
@@ -106,7 +111,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           <button onClick={onNext} className="text-zinc-400 hover:text-white transition-colors">
             <SkipForward className="w-5 h-5 fill-current" />
           </button>
-          <button onClick={() => setIsRepeat(!isRepeat)} className={`${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
+          <button onClick={onToggleRepeat} className={`${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Repeat className="w-4 h-4" />
           </button>
         </div>
@@ -185,9 +190,9 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           )}
         </button>
-        <button className="hover:text-white transition-colors" title="EQ"><SlidersHorizontal className="w-[18px] h-[18px]" /></button>
-        <button className="hover:text-white transition-colors" title="Queue"><ListMusic className="w-[18px] h-[18px]" /></button>
-        <button className="hover:text-white transition-colors" title="Full Screen"><Maximize2 className="w-[18px] h-[18px]" /></button>
+        <button onClick={onToggleEQ} className="hover:text-white transition-colors" title="EQ"><SlidersHorizontal className="w-[18px] h-[18px]" /></button>
+        <button onClick={onToggleQueue} className="hover:text-white transition-colors" title="Queue"><ListMusic className="w-[18px] h-[18px]" /></button>
+        <button onClick={onToggleFullscreen} className="hover:text-white transition-colors" title="Full Screen"><Maximize2 className="w-[18px] h-[18px]" /></button>
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ import { ViewState, Track, Notification, Playlist, Artist } from './types';
 import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser, popularArtists } from './data';
 import { auth, db, storage } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs, doc, setDoc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { ref, listAll, deleteObject, getDownloadURL, uploadBytes } from 'firebase/storage';
 
 export default function App() {
@@ -79,6 +79,10 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState('0:00');
   const [duration, setDuration] = useState('0:00');
   const [volume, setVolume] = useState(0.8);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isEQOpen, setIsEQOpen] = useState(false);
   
   // Provide some initial mock liked tracks
   const [likedTrackIds, setLikedTrackIds] = useState<Set<string>>(new Set([allTracks[0].id, allTracks[2].id]));
@@ -258,18 +262,6 @@ export default function App() {
       setCurrentTime(formatTime(current));
       setDuration(formatTime(total));
       setProgress(total > 0 ? current / total : 0);
-
-      if ('mediaSession' in navigator && !isNaN(total) && total > 0) {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: total,
-            playbackRate: audioRef.current.playbackRate,
-            position: current,
-          });
-        } catch (e) {
-          // Ignore state update errors
-        }
-      }
     }
   };
 
@@ -277,7 +269,18 @@ export default function App() {
 
   const playNext = () => {
     if (queue.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % queue.length);
+    if (isRepeat) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+      }
+      return;
+    }
+    if (isShuffle) {
+      setCurrentIndex(Math.floor(Math.random() * queue.length));
+    } else {
+      setCurrentIndex((prev) => (prev + 1) % queue.length);
+    }
     setIsPlaying(true);
   };
 
@@ -287,7 +290,11 @@ export default function App() {
       audioRef.current.currentTime = 0;
       return;
     }
-    setCurrentIndex((prev) => (prev - 1 + queue.length) % queue.length);
+    if (isShuffle) {
+      setCurrentIndex(Math.floor(Math.random() * queue.length));
+    } else {
+      setCurrentIndex((prev) => (prev - 1 + queue.length) % queue.length);
+    }
     setIsPlaying(true);
   };
 
@@ -296,7 +303,7 @@ export default function App() {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentTrack.title,
         artist: currentTrack.artist || 'Unknown Artist',
-        album: currentTrack.genre,
+        album: currentTrack.genre || 'Single',
         artwork: [
           { src: currentTrack.coverUrl, sizes: '96x96', type: 'image/jpeg' },
           { src: currentTrack.coverUrl, sizes: '128x128', type: 'image/jpeg' },
@@ -304,14 +311,16 @@ export default function App() {
           { src: currentTrack.coverUrl, sizes: '512x512', type: 'image/jpeg' },
         ]
       });
+    }
+  }, [currentTrack]); // Only recreate metadata when the track changes
 
+  useEffect(() => {
+    if ('mediaSession' in navigator && currentTrack) {
       navigator.mediaSession.setActionHandler('play', () => {
         setIsPlaying(true);
-        if (audioRef.current) audioRef.current.play();
       });
       navigator.mediaSession.setActionHandler('pause', () => {
         setIsPlaying(false);
-        if (audioRef.current) audioRef.current.pause();
       });
       navigator.mediaSession.setActionHandler('previoustrack', playPrev);
       navigator.mediaSession.setActionHandler('nexttrack', playNext);
@@ -321,9 +330,9 @@ export default function App() {
          }
       });
     }
-  }, [currentTrack, queue, isPlaying]);
+  }, [currentTrack, queue, isShuffle, isRepeat]); // Update handlers when these states change
 
-  const handlePlayTrack = (track: Track, newQueue?: Track[]) => {
+  const handlePlayTrack = async (track: Track, newQueue?: Track[]) => {
     const q = newQueue && newQueue.length > 0 ? newQueue : [track];
     setQueue(q);
     const idx = q.findIndex(t => t.id === track.id);
@@ -334,6 +343,15 @@ export default function App() {
       const filtered = prev.filter(t => t.id !== track.id);
       return [track, ...filtered].slice(0, 10);
     });
+
+    if (track.createdAt || !track.id.startsWith('t')) { // Ensure it's likely a firestore document
+      try {
+        const trackRef = doc(db, 'tracks', track.id);
+        await updateDoc(trackRef, { plays: increment(1) });
+      } catch (err) {
+        console.error("Failed to increment plays in Firestore", err);
+      }
+    }
   };
 
   const handleSeek = (percent: number) => {
@@ -614,8 +632,9 @@ export default function App() {
       case 'home': {
         const liked = allTracks.filter(t => likedTrackIds.has(t.id));
         const newReleases = [...allTracks].reverse().slice(0, 5); // Just a simulation of new releases
+        const trendingSorted = [...allTracks].sort((a, b) => (b.plays || 0) - (a.plays || 0));
         return <HomeFeed 
-                 trending={allTracks} 
+                 trending={trendingSorted} 
                  aiPlaylists={aiPlaylists} 
                  recentlyPlayed={recentlyPlayed} 
                  popularArtists={dynamicArtists}
@@ -758,12 +777,25 @@ export default function App() {
         duration={displayDuration}
         volume={volume}
         isLiked={currentTrack ? likedTrackIds.has(currentTrack.id) : false}
+        isShuffle={isShuffle}
+        isRepeat={isRepeat}
         onTogglePlay={() => setIsPlaying(!isPlaying)}
         onNext={playNext}
         onPrev={playPrev}
         onSeek={handleSeek}
         onVolumeChange={setVolume}
         onToggleLike={() => currentTrack && toggleLike(currentTrack.id)}
+        onToggleShuffle={() => setIsShuffle(!isShuffle)}
+        onToggleRepeat={() => setIsRepeat(!isRepeat)}
+        onToggleQueue={() => setIsQueueOpen(!isQueueOpen)}
+        onToggleFullscreen={() => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+          }
+        }}
+        onToggleEQ={() => setIsEQOpen(true)}
         onDownload={(track) => {
           setDownloadedTracks(prev => {
             if (!prev.find(t => t.id === track.id)) {
@@ -805,6 +837,71 @@ export default function App() {
       )}
       {isAiChatModalOpen && (
         <AIChatModal onClose={() => setIsAiChatModalOpen(false)} />
+      )}
+      
+      {/* Queue Sidebar */}
+      {isQueueOpen && (
+        <div className="absolute top-0 bottom-24 right-0 w-[400px] bg-[#0a0a0a] border-l border-white/5 shadow-2xl z-40 flex flex-col transform transition-transform">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <h2 className="text-xl font-bold">Play Queue</h2>
+            <button onClick={() => setIsQueueOpen(false)} className="text-zinc-400 hover:text-white">
+              <span className="sr-only">Close</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            {currentTrack && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-zinc-400 mb-3 ml-2">Now Playing</h3>
+                <div className="flex items-center gap-3 p-2 rounded-md bg-white/5">
+                  <img src={currentTrack.coverUrl} className="w-10 h-10 rounded object-cover" alt="" />
+                  <div>
+                    <p className="text-sm text-fuchsia-400 font-medium">{currentTrack.title}</p>
+                    <p className="text-xs text-zinc-400">{currentTrack.artist}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-400 mb-3 ml-2">Next Up</h3>
+              {queue.slice(currentIndex + 1, currentIndex + 20).map((t, idx) => (
+                <div key={`${t.id}-${idx}`} className="flex items-center gap-3 p-2 rounded-md hover:bg-white/5 cursor-pointer" onClick={() => {
+                  setCurrentIndex(currentIndex + 1 + idx);
+                  setIsPlaying(true);
+                }}>
+                  <img src={t.coverUrl} className="w-10 h-10 rounded object-cover" alt="" />
+                  <div>
+                    <p className="text-sm text-white font-medium">{t.title}</p>
+                    <p className="text-xs text-zinc-400">{t.artist}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EQ Overlay */}
+      {isEQOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center" onClick={() => setIsEQOpen(false)}>
+          <div className="bg-[#121215] border border-white/10 p-8 rounded-2xl max-w-md w-full relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setIsEQOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-fuchsia-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <h2 className="text-xl font-bold mt-1">Equalizer</h2>
+            </div>
+            <div className="flex items-end justify-between h-40 gap-2 mb-6">
+              {[40, 70, 30, 90, 50, 80, 60].map((h, i) => (
+                <div key={i} className="w-full bg-[#1a1a1a] rounded-t-sm h-full flex items-end">
+                  <div className="w-full bg-gradient-to-t from-violet-600 to-fuchsia-600 rounded-t-sm transition-all" style={{ height: `${h}%` }}></div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-zinc-400 text-sm">Advanced audio equalization coming soon.</p>
+          </div>
+        </div>
       )}
     </div>
   );

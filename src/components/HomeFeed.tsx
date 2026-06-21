@@ -185,6 +185,33 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
           </div>
         </section>
 
+        {/* Recently Played */}
+        {recentlyPlayed && recentlyPlayed.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="text-[22px] font-bold text-white tracking-tight">Recently Played</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {recentlyPlayed.slice(0, 5).map((track, idx) => (
+                <div key={`${track.id}-${idx}`} className="group bg-[#121215] border border-white/5 p-4 rounded-[1.5rem] hover:bg-[#18181b] transition-all cursor-pointer shadow-lg" onClick={() => onPlay(track, recentlyPlayed)}>
+                  <div className="relative aspect-square mb-4 overflow-hidden rounded-[1rem] shadow-md">
+                    <img src={track.coverUrl} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={track.title} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onPlay(track, recentlyPlayed); }}
+                      className="absolute bottom-3 right-3 w-10 h-10 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
+                    >
+                      <Play className="w-5 h-5 text-white fill-current ml-0.5" />
+                    </button>
+                  </div>
+                  <h3 className="text-white font-bold text-[14px] mb-1 truncate group-hover:text-fuchsia-400 transition-colors">{track.title}</h3>
+                  <p className="text-[12px] text-zinc-500 truncate">{track.artist}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Trending AI Songs */}
         <section>
           <div className="flex items-center justify-between mb-6">
