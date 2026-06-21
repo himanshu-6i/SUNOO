@@ -2,7 +2,7 @@ import { Music, ArrowRight, Github, Lock, Mail } from 'lucide-react';
 import React, { useState } from 'react';
 import { SunooLogo } from './SunooLogo';
 import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, signInAnonymously } from 'firebase/auth';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -79,6 +79,18 @@ export function LoginView({ onLogin }: LoginViewProps) {
       console.error('Error signing in with Github:', error);
       setAuthError(error.message || 'Failed to sign in with Github');
       setIsGithubLoading(false);
+    }
+  };
+
+  const handleSkipLogin = async () => {
+    try {
+      await signInAnonymously(auth);
+      onLogin();
+    } catch (error: any) {
+      console.error('Error signing in anonymously:', error);
+      setAuthError(error.message || 'Failed to skip login');
+      // Fallback
+      onLogin();
     }
   };
 
@@ -189,6 +201,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
                 </>
               )}
             </button>
+
+            <button 
+              type="button"
+              onClick={handleSkipLogin}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-zinc-800/50 border border-white/10 rounded-xl hover:bg-zinc-800 transition-colors font-medium text-zinc-300"
+            >
+              Skip Login (Guest Mode)
+            </button>
           </div>
         </div>
 
@@ -234,10 +254,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   <li className="flex gap-4">
                     <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
                     <div>
-                      <span>Click <strong>Add domain</strong> and add both of these URLs one by one:</span>
+                      <span>Click <strong>Add domain</strong> and add this exact URL:</span>
                       <ul className="list-disc pl-5 mt-2 space-y-1 font-mono text-xs text-violet-300">
-                        <li>ais-dev-ngtcsieoeiaowgff3kah6s-48977308293.asia-southeast1.run.app</li>
-                        <li>ais-pre-ngtcsieoeiaowgff3kah6s-48977308293.asia-southeast1.run.app</li>
+                        <li>{window.location.hostname}</li>
                       </ul>
                     </div>
                   </li>
