@@ -2,7 +2,7 @@ import { Music, ArrowRight, Github, Lock, Mail } from 'lucide-react';
 import React, { useState } from 'react';
 import { SunooLogo } from './SunooLogo';
 import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, signInAnonymously } from 'firebase/auth';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -79,6 +79,19 @@ export function LoginView({ onLogin }: LoginViewProps) {
       console.error('Error signing in with Github:', error);
       setAuthError(error.message || 'Failed to sign in with Github');
       setIsGithubLoading(false);
+    }
+  };
+
+  const handleSkipLogin = async () => {
+    try {
+      await signInAnonymously(auth);
+      onLogin();
+    } catch (error: any) {
+      console.error('Error signing in anonymously:', error);
+      setAuthError(error.message || 'Failed to skip login');
+      
+      // Fallback in case anonymous auth is disabled; just let them in the UI visually
+      onLogin();
     }
   };
 
@@ -173,7 +186,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading || isLoading}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50 font-medium"
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50 font-medium mb-3"
             >
               {isGoogleLoading ? (
                 <div className="w-5 h-5 border-2 border-white/50 border-r-transparent rounded-full animate-spin" />
@@ -188,6 +201,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   Sign in with Google
                 </>
               )}
+            </button>
+
+            <button 
+              type="button"
+              onClick={handleSkipLogin}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-zinc-800/50 border border-white/10 rounded-xl hover:bg-zinc-800 transition-colors font-medium text-zinc-300"
+            >
+              Skip Login (Guest Mode)
             </button>
           </div>
         </div>

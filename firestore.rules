@@ -29,22 +29,17 @@ service cloud.firestore {
     }
 
     match /tracks/{trackId} {
-      // Any authenticated user can read public tracks
-      allow read: if isSignedIn() && existing().visibility == 'public';
+      // Any user can read public tracks
+      allow read: if existing().visibility == 'public';
 
       // Create action
       allow create: if isSignedIn() 
         && isValidId(trackId)
         && isValidTrack(incoming());
 
-      // Update action: only owner can update some fields
-      allow update: if isSignedIn() 
-        && isValidId(trackId)
-        && existing().ownerId == request.auth.uid
-        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'coverUrl', 'visibility'])
-        && (incoming().get('title', existing().title) is string && incoming().get('title', existing().title).size() <= 100)
-        && incoming().ownerId == existing().ownerId // immutability
-        && incoming().createdAt == existing().createdAt; // immutability
+      // Update action: owner can update anything except readonly. ANYONE can update `plays`
+      allow update: if (isSignedIn() && existing().ownerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'coverUrl', 'visibility']) && (incoming().get('title', existing().title) is string && incoming().get('title', existing().title).size() <= 100))
+        || (incoming().diff(existing()).affectedKeys().hasOnly(['plays']) && incoming().plays == existing().plays + 1);
 
       // Delete action: only owner or admin can delete
       allow delete: if isSignedIn() 
