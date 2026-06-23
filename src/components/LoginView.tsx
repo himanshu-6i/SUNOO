@@ -2,7 +2,7 @@ import { Music, ArrowRight, Github, Lock, Mail } from 'lucide-react';
 import React, { useState } from 'react';
 import { SunooLogo } from './SunooLogo';
 import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, signInAnonymously } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -79,18 +79,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
       console.error('Error signing in with Github:', error);
       setAuthError(error.message || 'Failed to sign in with Github');
       setIsGithubLoading(false);
-    }
-  };
-
-  const handleSkipLogin = async () => {
-    try {
-      await signInAnonymously(auth);
-      onLogin();
-    } catch (error: any) {
-      console.error('Error signing in anonymously:', error);
-      setAuthError(error.message || 'Failed to skip login');
-      // Fallback
-      onLogin();
     }
   };
 
@@ -185,7 +173,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading || isLoading}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50 font-medium mb-3"
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50 font-medium"
             >
               {isGoogleLoading ? (
                 <div className="w-5 h-5 border-2 border-white/50 border-r-transparent rounded-full animate-spin" />
@@ -200,14 +188,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   Sign in with Google
                 </>
               )}
-            </button>
-
-            <button 
-              type="button"
-              onClick={handleSkipLogin}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-zinc-800/50 border border-white/10 rounded-xl hover:bg-zinc-800 transition-colors font-medium text-zinc-300"
-            >
-              Skip Login (Guest Mode)
             </button>
           </div>
         </div>
@@ -234,25 +214,21 @@ export function LoginView({ onLogin }: LoginViewProps) {
           <div className="bg-[#18181b] border border-white/10 p-8 rounded-3xl max-w-lg w-full shadow-2xl relative shadow-violet-500/10">
             {showConfigModal === 'domain' ? (
               <>
-                <h3 className="text-2xl font-bold text-white mb-2">Unauthorized Domain</h3>
+                <h3 className="text-2xl font-bold text-white mb-2">Domain Propagation Delay</h3>
                 <p className="text-zinc-400 mb-6 font-medium text-sm">
-                  This domain isn't authorized for Firebase Authentication in your project. You need to add it to your Firebase project to enable Google/Github login.
+                  This domain isn't fully authorized for Google/Github login yet. If you just added it, <strong className="text-white">it takes Firebase up to 5-10 minutes to propagate the changes.</strong>
                 </p>
+                <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4 mb-6">
+                  <h4 className="text-violet-300 font-bold mb-2">Fastest Solution:</h4>
+                  <p className="text-zinc-300 text-sm">Close this modal and try using <strong>Email and Password</strong> instead! It works instantly and doesn't require domain authorization.</p>
+                </div>
                 <ol className="space-y-4 mb-8 text-sm text-zinc-300">
                   <li className="flex gap-4">
                     <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">1</span>
-                    <span>Go to your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-violet-400 font-medium hover:underline">Firebase Console</a> and open your project.</span>
+                    <span>If you haven't yet, go to Firebase Console &rarr; Authentication &rarr; Settings &rarr; Authorized Domains.</span>
                   </li>
                   <li className="flex gap-4">
                     <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">2</span>
-                    <span>Click on <strong>Authentication</strong> in the left sidebar, then go to the <strong>Settings</strong> tab.</span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">3</span>
-                    <span>Click on <strong>Authorized domains</strong>.</span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="w-6 h-6 flex items-center justify-center bg-violet-600 rounded-full text-white font-bold shrink-0">4</span>
                     <div>
                       <span>Click <strong>Add domain</strong> and add this exact URL:</span>
                       <ul className="list-disc pl-5 mt-2 space-y-1 font-mono text-xs text-violet-300">

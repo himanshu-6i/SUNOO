@@ -416,7 +416,8 @@ export default function App() {
   }
 
   const handleTrackUpload = async (newTrack: Track, files?: { audio: File | null; cover: File | null }) => {
-    if (!sessionUser) return;
+    const userId = sessionUser?.uid || 'guest-123';
+    const userName = sessionUser?.email?.split('@')[0] || sessionUser?.displayName || 'Guest Artist';
     
     try {
       const trackId = `t_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
@@ -472,14 +473,14 @@ export default function App() {
         audioUrl: audioDownloadUrl || '',
         genre: newTrack.genre,
         plays: 0,
-        ownerId: sessionUser.uid,
+        ownerId: userId,
         visibility: 'public',
         createdAt: new Date().toISOString()
       };
       
       await setDoc(doc(db, 'tracks', trackId), dbTrack);
       
-      const finalTrack = { ...newTrack, id: trackId, audioUrl: audioDownloadUrl || '', coverUrl: coverDownloadUrl || '', ownerId: sessionUser.uid, visibility: 'public' as const };
+      const finalTrack = { ...newTrack, id: trackId, audioUrl: audioDownloadUrl || '', coverUrl: coverDownloadUrl || '', ownerId: userId, visibility: 'public' as const };
       
       const nextTracks = [finalTrack, ...allTracks];
       setAllTracks(nextTracks);
