@@ -595,6 +595,12 @@ export default function App() {
       setIsAiChatModalOpen(true);
       return;
     }
+    if (view === 'creator') {
+      if (!sessionUser || sessionUser.isAnonymous) {
+        setCurrentView('login');
+        return;
+      }
+    }
     
     let targetView = view;
     if (view === 'liked') {
