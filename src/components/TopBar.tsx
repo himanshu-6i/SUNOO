@@ -151,41 +151,50 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
           )}
         </div>
 
-        {/* Profile Dropdown */}
-        <div className="relative" ref={profileRef}>
-          <button 
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 hover:bg-white/5 pr-2 rounded-full transition-colors focus:outline-none py-1"
-          >
-            <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden border border-white/10 shrink-0">
-               <img src={user?.photoURL || mockUser.avatarUrl} alt={user?.displayName || mockUser.name} className="w-full h-full object-cover" />
-            </div>
-            <div className="flex flex-col items-start hidden lg:flex text-left">
-               <span className="text-[12px] font-bold text-white transition-colors">{user?.displayName || mockUser.name}</span>
-               <span className="text-[10px] text-zinc-500 capitalize">{mockUser.role} Plan</span>
-            </div>
-            <ChevronDown className="w-4 h-4 text-zinc-500 ml-1 hidden lg:block" />
-          </button>
+        {/* Profile Dropdown or Login Button */}
+        {user && !user.isAnonymous ? (
+          <div className="relative" ref={profileRef}>
+            <button 
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center gap-3 hover:bg-white/5 pr-2 rounded-full transition-colors focus:outline-none py-1"
+            >
+              <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden border border-white/10 shrink-0">
+                 <img src={user?.photoURL || mockUser.avatarUrl} alt={user?.displayName || mockUser.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col items-start hidden lg:flex text-left">
+                 <span className="text-[12px] font-bold text-white transition-colors">{user?.displayName || mockUser.name}</span>
+                 <span className="text-[10px] text-zinc-500 capitalize">{mockUser.role} Plan</span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-zinc-500 ml-1 hidden lg:block" />
+            </button>
 
-          {showProfileMenu && (
-            <div className="absolute right-0 mt-4 w-48 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl py-1 z-50 animate-in fade-in slide-in-from-top-2">
-               <div className="px-4 py-3 border-b border-white/5 lg:hidden">
-                 <p className="text-sm font-semibold text-white truncate">{user?.displayName || mockUser.name}</p>
-                 <p className="text-xs text-zinc-500 capitalize">{mockUser.role} Plan</p>
-               </div>
-               <button onClick={() => { onNavigate('profile'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-zinc-300 hover:bg-white/5 hover:text-white transition-colors">Profile</button>
-               <button onClick={() => { onNavigate('settings'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-zinc-300 hover:bg-white/5 hover:text-white transition-colors">Settings</button>
-               <div className="border-t border-white/5 mt-1 pt-1">
-                 <button 
-                  onClick={() => { onLogout(); setShowProfileMenu(false); }}
-                  className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors"
-                 >
-                   Log Out
-                 </button>
-               </div>
-            </div>
-          )}
-        </div>
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-4 w-48 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                 <div className="px-4 py-3 border-b border-white/5 lg:hidden">
+                   <p className="text-sm font-semibold text-white truncate">{user?.displayName || mockUser.name}</p>
+                   <p className="text-xs text-zinc-500 capitalize">{mockUser.role} Plan</p>
+                 </div>
+                 <button onClick={() => { onNavigate('profile'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-zinc-300 hover:bg-white/5 hover:text-white transition-colors">Profile</button>
+                 <button onClick={() => { onNavigate('settings'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-zinc-300 hover:bg-white/5 hover:text-white transition-colors">Settings</button>
+                 <div className="border-t border-white/5 mt-1 pt-1">
+                   <button 
+                    onClick={() => { onLogout(); setShowProfileMenu(false); }}
+                    className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors"
+                   >
+                     Log Out
+                   </button>
+                 </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button 
+            onClick={() => onNavigate('login' as any)}
+            className="flex items-center justify-center bg-violet-600 hover:bg-violet-500 text-white font-medium text-sm px-6 py-2 rounded-full transition-colors shrink-0"
+          >
+            Log In
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Music, ArrowRight, Github, Lock, Mail } from 'lucide-react';
+import { Music, ArrowRight, Github, Lock, Mail, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { SunooLogo } from './SunooLogo';
 import { auth } from '../firebase';
@@ -6,9 +6,10 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithP
 
 interface LoginViewProps {
   onLogin: () => void;
+  onClose?: () => void;
 }
 
-export function LoginView({ onLogin }: LoginViewProps) {
+export function LoginView({ onLogin, onClose }: LoginViewProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +90,16 @@ export function LoginView({ onLogin }: LoginViewProps) {
         <div className="w-[800px] h-[800px] bg-violet-600/20 rounded-full blur-[120px] -translate-y-1/4 -translate-x-1/4" />
         <div className="w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[100px] translate-y-1/4 translate-x-1/4" />
       </div>
+
+      {onClose && (
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 bg-white/5 border border-white/10 hover:bg-white/10 rounded-full transition-colors z-50 group"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
+        </button>
+      )}
 
       <div className="w-full max-w-md p-8 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="flex flex-col items-center mb-10">

@@ -247,6 +247,7 @@ export default function App() {
 
   const handleLogin = () => {
     setIsAuthenticated(true);
+    setCurrentView('home');
   };
 
   const formatTime = (time: number) => {
@@ -411,8 +412,8 @@ export default function App() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <LoginView onLogin={handleLogin} />;
+  if (currentView === 'login') {
+    return <LoginView onLogin={handleLogin} onClose={() => setCurrentView('home')} />;
   }
 
   const handleTrackUpload = async (newTrack: Track, files?: { audio: File | null; cover: File | null }) => {
