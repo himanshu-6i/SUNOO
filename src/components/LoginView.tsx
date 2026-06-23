@@ -53,7 +53,7 @@ export function LoginView({ onLogin, onClose }: LoginViewProps) {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      // Let the onAuthStateChanged in App.tsx handle navigation
+      onLogin();
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
       if (error.code === 'auth/operation-not-allowed') {
