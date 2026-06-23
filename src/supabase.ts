@@ -9,7 +9,7 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').replace(/["']/g, '').trim();
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
+  // Silent fallback: Supabase is only used for track uploads. Authentication uses Firebase.
 }
 
 export const supabase = createClient(
