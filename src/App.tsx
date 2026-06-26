@@ -420,6 +420,10 @@ export default function App() {
     const userName = sessionUser?.email?.split('@')[0] || sessionUser?.displayName || 'Guest Artist';
     
     try {
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        throw new Error("Supabase credentials are missing. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables.");
+      }
+
       const trackId = `t_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
       
       let audioDownloadUrl = newTrack.audioUrl;
@@ -430,16 +434,19 @@ export default function App() {
         const audioPath = `tracks/audio_${Date.now()}_${safeName}`;
         
         const { data, error } = await supabase.storage
-          .from('assets')
+          .from('tracks')
           .upload(audioPath, files.audio);
           
         if (error) {
           console.error("Audio upload error:", error);
-          throw error;
+          if (error.message.includes('Bucket not found')) {
+            throw new Error("Supabase bucket 'tracks' not found. Please create a public storage bucket named 'tracks' in your Supabase dashboard.");
+          }
+          throw new Error(`Supabase Audio Upload Failed: ${error.message}`);
         }
         
         const { data: publicUrlData } = supabase.storage
-          .from('assets')
+          .from('tracks')
           .getPublicUrl(audioPath);
           
         audioDownloadUrl = publicUrlData.publicUrl;
@@ -450,16 +457,19 @@ export default function App() {
         const coverPath = `tracks/cover_${Date.now()}_${safeName}`;
         
         const { data, error } = await supabase.storage
-          .from('assets')
+          .from('tracks')
           .upload(coverPath, files.cover);
           
         if (error) {
           console.error("Cover upload error:", error);
-          throw error;
+          if (error.message.includes('Bucket not found')) {
+            throw new Error("Supabase bucket 'tracks' not found. Please create a public storage bucket named 'tracks' in your Supabase dashboard.");
+          }
+          throw new Error(`Supabase Cover Upload Failed: ${error.message}`);
         }
         
         const { data: publicUrlData } = supabase.storage
-          .from('assets')
+          .from('tracks')
           .getPublicUrl(coverPath);
           
         coverDownloadUrl = publicUrlData.publicUrl;
@@ -495,6 +505,7 @@ export default function App() {
       handleNavigate('library:uploaded');
     } catch (e: any) {
       console.error("Failed to upload track: ", e);
+      alert(e.message || "Failed to upload track");
       throw e;
     }
   };
