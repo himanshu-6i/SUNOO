@@ -123,6 +123,8 @@ export default function App() {
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const loadedTrackIdRef = useRef<string | null>(null);
+
   // Sync audio state with player
   useEffect(() => {
     if (audioRef.current && currentTrack) {
@@ -134,14 +136,11 @@ export default function App() {
         return;
       }
 
-      // Check if URL actually changed by converting to absolute just in case
-      const currentUrlStr = audio.src || '';
-      // We do endsWith or construct proper object just to be robust
-      const willSourceChange = !currentUrlStr.endsWith(currentTrack.audioUrl);
-      
-      if (willSourceChange) {
+      // Load new track if it changed
+      if (loadedTrackIdRef.current !== currentTrack.id) {
         audio.src = currentTrack.audioUrl;
         audio.load(); // sometimes required when changing src programmatically
+        loadedTrackIdRef.current = currentTrack.id;
       }
       
       if (isPlaying) {
