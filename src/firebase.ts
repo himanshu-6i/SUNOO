@@ -7,16 +7,18 @@ const firebaseConfig = configFiles['../firebase-applet-config.json'] ? (configFi
 
 console.log('firebaseConfig extracted:', firebaseConfig);
 
-const providedBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket || "missing";
+const providedBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket || "gen-lang-client-0860021576.firebasestorage.app";
 const bucketToUse = providedBucket.includes('.firebasestorage.app') ? providedBucket.replace('.firebasestorage.app', '.appspot.com') : providedBucket;
 
 const config = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey || "missing-api-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain || "missing",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId || "missing",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey || "AIzaSyD2S3NOEfIIbHlqabG2osieE-jCWw2CKts",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain || "gen-lang-client-0860021576.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId || "gen-lang-client-0860021576",
   storageBucket: bucketToUse,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId || "missing",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfig.appId || "1:1111:web:111",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId || "82434293809",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfig.appId || "1:82434293809:web:7febd1e723fa262979d510",
+  databaseURL: "https://gen-lang-client-0860021576-default-rtdb.firebaseio.com",
+  measurementId: "G-K513LVE87D"
 };
 
 const app = initializeApp(config);
