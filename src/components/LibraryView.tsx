@@ -16,6 +16,7 @@ interface LibraryViewProps {
 
 export function LibraryView({ likedTracks, playlists, downloadedTracks, uploadedTracks, defaultTab = 'liked', onPlay, onRemoveLike, onSelectPlaylist, onDeleteTrack }: LibraryViewProps) {
   const [activeTab, setActiveTab] = useState<'liked' | 'playlists' | 'downloaded' | 'uploaded'>(defaultTab);
+  const [trackToDelete, setTrackToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -219,7 +220,7 @@ export function LibraryView({ likedTracks, playlists, downloadedTracks, uploaded
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDeleteTrack(track.id);
+                            setTrackToDelete(track.id);
                           }}
                           className="text-zinc-500 hover:text-red-500 p-2 transition-colors focus:outline-none"
                           title="Delete Track"
@@ -233,6 +234,32 @@ export function LibraryView({ likedTracks, playlists, downloadedTracks, uploaded
              </div>
            )}
          </>
+       )}
+
+       {trackToDelete && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+           <div className="bg-zinc-900 border border-white/10 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+             <h3 className="text-xl font-bold text-white mb-2">Delete Track</h3>
+             <p className="text-zinc-400 mb-6">Are you sure you want to delete this track? This action cannot be undone.</p>
+             <div className="flex gap-4">
+               <button 
+                 onClick={() => setTrackToDelete(null)}
+                 className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors focus:outline-none"
+               >
+                 Cancel
+               </button>
+               <button 
+                 onClick={() => {
+                   if (onDeleteTrack) onDeleteTrack(trackToDelete);
+                   setTrackToDelete(null);
+                 }}
+                 className="flex-1 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 font-medium transition-colors focus:outline-none"
+               >
+                 Delete
+               </button>
+             </div>
+           </div>
+         </div>
        )}
     </div>
    );

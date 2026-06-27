@@ -132,6 +132,11 @@ export default function App() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isEQOpen, setIsEQOpen] = useState(false);
   
+  const stateRef = useRef({ queue, currentIndex, isShuffle, isRepeat });
+  useEffect(() => {
+    stateRef.current = { queue, currentIndex, isShuffle, isRepeat };
+  }, [queue, currentIndex, isShuffle, isRepeat]);
+  
   // Provide some initial mock liked tracks
   const [likedTrackIds, setLikedTrackIds] = useState<Set<string>>(() => {
     try {
@@ -339,6 +344,7 @@ export default function App() {
   const handleEnded = () => playNext();
 
   const playNext = async () => {
+    const { queue, currentIndex, isShuffle, isRepeat } = stateRef.current;
     if (queue.length === 0) return;
     if (isRepeat) {
       if (audioRef.current) {
@@ -372,6 +378,7 @@ export default function App() {
   };
 
   const playPrev = async () => {
+    const { queue, currentIndex, isShuffle, isRepeat } = stateRef.current;
     if (queue.length === 0) return;
     if (audioRef.current && audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
@@ -423,8 +430,15 @@ export default function App() {
     }
   }, [currentTrack]); // Only recreate metadata when the track changes
 
+  const playNextRef = useRef(playNext);
+  const playPrevRef = useRef(playPrev);
   useEffect(() => {
-    if ('mediaSession' in navigator && currentTrack) {
+    playNextRef.current = playNext;
+    playPrevRef.current = playPrev;
+  });
+
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
       navigator.mediaSession.setActionHandler('play', () => {
         if (audioRef.current) {
           audioRef.current.play().catch(e => console.warn(e));
@@ -437,15 +451,15 @@ export default function App() {
         }
         setIsPlaying(false);
       });
-      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
-      navigator.mediaSession.setActionHandler('nexttrack', playNext);
+      navigator.mediaSession.setActionHandler('previoustrack', () => playPrevRef.current());
+      navigator.mediaSession.setActionHandler('nexttrack', () => playNextRef.current());
       navigator.mediaSession.setActionHandler('seekto', (details) => {
          if (details.seekTime && audioRef.current) {
            audioRef.current.currentTime = details.seekTime;
          }
       });
     }
-  }, [currentTrack, queue, isShuffle, isRepeat]); // Update handlers when these states change
+  }, []); // Run once to set up handlers
 
   const handlePlayTrack = async (track: Track, newQueue?: Track[]) => {
     const q = newQueue && newQueue.length > 0 ? newQueue : [track];
