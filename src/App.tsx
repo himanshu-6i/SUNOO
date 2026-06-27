@@ -268,34 +268,68 @@ export default function App() {
 
   const handleEnded = () => playNext();
 
-  const playNext = () => {
+  const playNext = async () => {
     if (queue.length === 0) return;
     if (isRepeat) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
-        audioRef.current.play();
+        audioRef.current.play().catch(e => console.warn(e));
       }
       return;
     }
+    
+    let nextIndex;
     if (isShuffle) {
-      setCurrentIndex(Math.floor(Math.random() * queue.length));
+      nextIndex = Math.floor(Math.random() * queue.length);
     } else {
-      setCurrentIndex((prev) => (prev + 1) % queue.length);
+      nextIndex = (currentIndex + 1) % queue.length;
     }
+    
+    const nextTrack = queue[nextIndex];
+    if (nextTrack && audioRef.current) {
+      audioRef.current.src = nextTrack.audioUrl;
+      audioRef.current.load();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          if (err.name !== 'AbortError') console.warn("Playback prevented:", err.message);
+        });
+      }
+      loadedTrackIdRef.current = nextTrack.id;
+    }
+
+    setCurrentIndex(nextIndex);
     setIsPlaying(true);
   };
 
-  const playPrev = () => {
+  const playPrev = async () => {
     if (queue.length === 0) return;
     if (audioRef.current && audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
       return;
     }
+    
+    let prevIndex;
     if (isShuffle) {
-      setCurrentIndex(Math.floor(Math.random() * queue.length));
+      prevIndex = Math.floor(Math.random() * queue.length);
     } else {
-      setCurrentIndex((prev) => (prev - 1 + queue.length) % queue.length);
+      prevIndex = (currentIndex - 1 + queue.length) % queue.length;
     }
+    
+    const prevTrack = queue[prevIndex];
+    if (prevTrack && audioRef.current) {
+      audioRef.current.src = prevTrack.audioUrl;
+      audioRef.current.load();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          if (err.name !== 'AbortError') console.warn("Playback prevented:", err.message);
+        });
+      }
+      loadedTrackIdRef.current = prevTrack.id;
+    }
+
+    setCurrentIndex(prevIndex);
     setIsPlaying(true);
   };
 

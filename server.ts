@@ -95,8 +95,8 @@ async function startServer() {
     } catch (e: any) {
       console.error("AI Music Generation err:", e);
       let errorMessage = e?.message || "An unexpected error occurred.";
-      if (errorMessage.includes('429') || errorMessage.includes('free tier') || errorMessage.includes('limit: 0') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-         errorMessage = "Music generation with the Lyria model requires a paid API key. The free tier does not support this feature at this time. Please upgrade your API key to generate music.";
+      if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+         errorMessage = "AI service limit reached. Please try again later.";
       }
       res.status(500).json({ error: errorMessage });
     }
