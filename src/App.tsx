@@ -197,7 +197,6 @@ export default function App() {
       // Load new track if it changed
       if (loadedTrackIdRef.current !== currentTrack.id) {
         audio.src = currentTrack.audioUrl;
-        audio.load(); // sometimes required when changing src programmatically
         loadedTrackIdRef.current = currentTrack.id;
       }
       
@@ -321,6 +320,19 @@ export default function App() {
       setCurrentTime(formatTime(current));
       setDuration(formatTime(total));
       setProgress(total > 0 ? current / total : 0);
+      
+      // Update Media Session position state
+      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && isFinite(total) && total > 0) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: total,
+            playbackRate: audioRef.current.playbackRate || 1,
+            position: current
+          });
+        } catch (err) {
+          // Ignore errors from setPositionState
+        }
+      }
     }
   };
 
@@ -346,7 +358,6 @@ export default function App() {
     const nextTrack = queue[nextIndex];
     if (nextTrack && audioRef.current) {
       audioRef.current.src = nextTrack.audioUrl;
-      audioRef.current.load();
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
@@ -377,7 +388,6 @@ export default function App() {
     const prevTrack = queue[prevIndex];
     if (prevTrack && audioRef.current) {
       audioRef.current.src = prevTrack.audioUrl;
-      audioRef.current.load();
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
@@ -447,7 +457,6 @@ export default function App() {
     if (audioRef.current) {
       if (loadedTrackIdRef.current !== track.id) {
         audioRef.current.src = track.audioUrl;
-        audioRef.current.load();
         loadedTrackIdRef.current = track.id;
       }
       const playPromise = audioRef.current.play();
@@ -911,6 +920,8 @@ export default function App() {
           setIsPlaying(false);
         }}
         playsInline
+        preload="auto"
+        {...{ 'x-webkit-airplay': 'allow' }}
       />
       <Sidebar 
         currentView={currentView} 
