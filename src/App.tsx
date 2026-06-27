@@ -18,6 +18,7 @@ import { AIChatModal } from './components/AIChatModal';
 import { ArtistView } from './components/ArtistView';
 import { FollowedArtistsView } from './components/FollowedArtistsView';
 import { GenrePlaylistView } from './components/GenrePlaylistView';
+import { PlaylistDetailView } from './components/PlaylistDetailView';
 import { ViewState, Track, Notification, Playlist, Artist } from './types';
 import { trendingTracks, aiPlaylists, initialNotifications, currentUser as mockUser, popularArtists } from './data';
 import { auth, db, storage } from './firebase';
@@ -31,15 +32,50 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState | string>('home');
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [libraryTab, setLibraryTab] = useState<'liked' | 'playlists' | 'downloaded' | 'uploaded'>('liked');
   const [history, setHistory] = useState<string[]>(['home']);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>('Free');
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>([]);
-  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
-  const [downloadedTracks, setDownloadedTracks] = useState<Track[]>([]);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>(() => {
+    try {
+      const saved = localStorage.getItem('sunoo_recently_played');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sunoo_recently_played', JSON.stringify(recentlyPlayed));
+  }, [recentlyPlayed]);
+  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>(() => {
+    try {
+      const saved = localStorage.getItem('sunoo_user_playlists');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sunoo_user_playlists', JSON.stringify(userPlaylists));
+  }, [userPlaylists]);
+
+  const [downloadedTracks, setDownloadedTracks] = useState<Track[]>(() => {
+    try {
+      const saved = localStorage.getItem('sunoo_downloaded_tracks');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sunoo_downloaded_tracks', JSON.stringify(downloadedTracks));
+  }, [downloadedTracks]);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false);
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
@@ -47,7 +83,18 @@ export default function App() {
   const [trackToAddToPlaylist, setTrackToAddToPlaylist] = useState<Track | null>(null);
   
   const [allTracks, setAllTracks] = useState<Track[]>(trendingTracks);
-  const [followedArtistIds, setFollowedArtistIds] = useState<Set<string>>(new Set());
+  const [followedArtistIds, setFollowedArtistIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('sunoo_followed_artists');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sunoo_followed_artists', JSON.stringify(Array.from(followedArtistIds)));
+  }, [followedArtistIds]);
   
   const dynamicUserPlaylists = useMemo(() => {
     return userPlaylists.map(playlist => {
@@ -86,7 +133,18 @@ export default function App() {
   const [isEQOpen, setIsEQOpen] = useState(false);
   
   // Provide some initial mock liked tracks
-  const [likedTrackIds, setLikedTrackIds] = useState<Set<string>>(new Set([allTracks[0].id, allTracks[2].id]));
+  const [likedTrackIds, setLikedTrackIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('sunoo_liked_tracks');
+      return saved ? new Set(JSON.parse(saved)) : new Set([allTracks[0].id, allTracks[2].id]);
+    } catch (e) {
+      return new Set([allTracks[0].id, allTracks[2].id]);
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sunoo_liked_tracks', JSON.stringify(Array.from(likedTrackIds)));
+  }, [likedTrackIds]);
 
   const dynamicArtists = useMemo(() => {
     const artistsMap = new Map<string, Artist>();
@@ -334,6 +392,12 @@ export default function App() {
   };
 
   useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
     if ('mediaSession' in navigator && currentTrack) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentTrack.title,
@@ -352,9 +416,15 @@ export default function App() {
   useEffect(() => {
     if ('mediaSession' in navigator && currentTrack) {
       navigator.mediaSession.setActionHandler('play', () => {
+        if (audioRef.current) {
+          audioRef.current.play().catch(e => console.warn(e));
+        }
         setIsPlaying(true);
       });
       navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
         setIsPlaying(false);
       });
       navigator.mediaSession.setActionHandler('previoustrack', playPrev);
@@ -373,6 +443,20 @@ export default function App() {
     const idx = q.findIndex(t => t.id === track.id);
     setCurrentIndex(idx >= 0 ? idx : 0);
     setIsPlaying(true);
+    
+    if (audioRef.current) {
+      if (loadedTrackIdRef.current !== track.id) {
+        audioRef.current.src = track.audioUrl;
+        audioRef.current.load();
+        loadedTrackIdRef.current = track.id;
+      }
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          if (err.name !== 'AbortError') console.warn("Playback prevented:", err.message);
+        });
+      }
+    }
 
     setRecentlyPlayed(prev => {
       const filtered = prev.filter(t => t.id !== track.id);
@@ -750,7 +834,15 @@ export default function App() {
         const userName = sessionUser?.displayName || mockUser.name;
         const isAdmin = sessionUser?.email === 'hm5080408@gmail.com';
         const uploaded = allTracks.filter(t => t.ownerId === currentUid || isAdmin || (currentUid ? false : t.artist === userName));
-        return <LibraryView likedTracks={liked} playlists={dynamicUserPlaylists} downloadedTracks={downloadedTracks} uploadedTracks={uploaded} onPlay={handlePlayTrack} onRemoveLike={toggleLike} onPlayPlaylist={(p) => handlePlayTrack(p.tracks[0], p.tracks)} defaultTab={libraryTab} onDeleteTrack={handleDeleteTrack} />;
+        return <LibraryView likedTracks={liked} playlists={dynamicUserPlaylists} downloadedTracks={downloadedTracks} uploadedTracks={uploaded} onPlay={handlePlayTrack} onRemoveLike={toggleLike} onSelectPlaylist={(p) => { setSelectedPlaylist(p); handleNavigate('playlist-detail'); }} defaultTab={libraryTab} onDeleteTrack={handleDeleteTrack} />;
+      }
+      case 'playlist-detail': {
+        if (!selectedPlaylist) {
+           return <div className="p-8 text-white">Playlist not found</div>;
+        }
+        // Always try to fetch the most up-to-date playlist from dynamicUserPlaylists just in case
+        const upToDatePlaylist = dynamicUserPlaylists.find(p => p.id === selectedPlaylist.id) || selectedPlaylist;
+        return <PlaylistDetailView playlist={upToDatePlaylist} onPlay={handlePlayTrack} playingTrackId={currentTrack?.id} isPlaying={isPlaying} />;
       }
       case 'premium':
         return <PremiumView currentPlan={subscriptionPlan} onSubscribe={setSubscriptionPlan} />;
@@ -854,7 +946,16 @@ export default function App() {
         isLiked={currentTrack ? likedTrackIds.has(currentTrack.id) : false}
         isShuffle={isShuffle}
         isRepeat={isRepeat}
-        onTogglePlay={() => setIsPlaying(!isPlaying)}
+        onTogglePlay={() => {
+          if (audioRef.current) {
+            if (isPlaying) {
+              audioRef.current.pause();
+            } else {
+              audioRef.current.play().catch(e => console.warn(e));
+            }
+          }
+          setIsPlaying(!isPlaying);
+        }}
         onNext={playNext}
         onPrev={playPrev}
         onSeek={handleSeek}

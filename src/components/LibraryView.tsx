@@ -10,11 +10,11 @@ interface LibraryViewProps {
   defaultTab?: 'liked' | 'playlists' | 'downloaded' | 'uploaded';
   onPlay: (track: Track, queue: Track[]) => void;
   onRemoveLike: (trackId: string) => void;
-  onPlayPlaylist: (playlist: Playlist) => void;
+  onSelectPlaylist: (playlist: Playlist) => void;
   onDeleteTrack?: (trackId: string) => void;
 }
 
-export function LibraryView({ likedTracks, playlists, downloadedTracks, uploadedTracks, defaultTab = 'liked', onPlay, onRemoveLike, onPlayPlaylist, onDeleteTrack }: LibraryViewProps) {
+export function LibraryView({ likedTracks, playlists, downloadedTracks, uploadedTracks, defaultTab = 'liked', onPlay, onRemoveLike, onSelectPlaylist, onDeleteTrack }: LibraryViewProps) {
   const [activeTab, setActiveTab] = useState<'liked' | 'playlists' | 'downloaded' | 'uploaded'>(defaultTab);
 
   useEffect(() => {
@@ -115,7 +115,7 @@ export function LibraryView({ likedTracks, playlists, downloadedTracks, uploaded
                  <div 
                    key={playlist.id} 
                    className="bg-black/40 border border-white/5 p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer"
-                   onClick={() => onPlayPlaylist(playlist)}
+                   onClick={() => onSelectPlaylist(playlist)}
                  >
                    <div className="relative aspect-square mb-4 overflow-hidden rounded-lg bg-zinc-800">
                      {playlist.coverUrl ? (
