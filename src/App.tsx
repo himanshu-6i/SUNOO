@@ -206,18 +206,21 @@ export default function App() {
       }
       
       if (isPlaying) {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            if (err.name !== 'AbortError') {
-              console.warn("Playback prevented:", err.message);
-              // Wait for user interaction
-              setIsPlaying(false);
-            }
-          });
+        if (audio.paused) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              if (err.name !== 'AbortError') {
+                console.warn("Playback prevented:", err.message);
+                setIsPlaying(false);
+              }
+            });
+          }
         }
       } else {
-        audio.pause();
+        if (!audio.paused) {
+          audio.pause();
+        }
       }
     }
   }, [currentIndex, currentTrack, isPlaying]);
@@ -343,7 +346,7 @@ export default function App() {
 
   const handleEnded = () => playNext();
 
-  const playNext = async () => {
+  const playNext = () => {
     const { queue, currentIndex, isShuffle, isRepeat } = stateRef.current;
     if (queue.length === 0) return;
     if (isRepeat) {
@@ -377,7 +380,7 @@ export default function App() {
     setIsPlaying(true);
   };
 
-  const playPrev = async () => {
+  const playPrev = () => {
     const { queue, currentIndex, isShuffle, isRepeat } = stateRef.current;
     if (queue.length === 0) return;
     if (audioRef.current && audioRef.current.currentTime > 3) {
@@ -508,11 +511,32 @@ export default function App() {
     if (!q && currentView === 'search') handleNavigate('home');
   };
 
+  const notify = (title: string, message: string) => {
+    setNotifications(prev => [
+      {
+        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title,
+        message,
+        time: 'Just now',
+        read: false
+      },
+      ...prev
+    ]);
+  };
+
   const toggleLike = (trackId: string) => {
     setLikedTrackIds(prev => {
       const next = new Set(prev);
-      if (next.has(trackId)) next.delete(trackId);
-      else next.add(trackId);
+      const isLiking = !next.has(trackId);
+      if (isLiking) {
+        next.add(trackId);
+        const track = allTracks.find(t => t.id === trackId);
+        if (track) {
+          notify('New Like', `You liked ${track.title} by ${track.artist}`);
+        }
+      } else {
+        next.delete(trackId);
+      }
       return next;
     });
   };
@@ -520,8 +544,21 @@ export default function App() {
   const toggleFollowArtist = (artistId: string) => {
     setFollowedArtistIds(prev => {
       const next = new Set(prev);
-      if (next.has(artistId)) next.delete(artistId);
-      else next.add(artistId);
+      const isFollowing = !next.has(artistId);
+      if (isFollowing) {
+        next.add(artistId);
+        const artist = dynamicArtists.find(a => a.id === artistId);
+        if (artist) {
+          notify('New Follower', `You are now following ${artist.name}`);
+          
+          // Simulate a new release from this artist shortly after following
+          setTimeout(() => {
+            notify('New Release', `${artist.name} just released a new track!`);
+          }, 3000);
+        }
+      } else {
+        next.delete(artistId);
+      }
       return next;
     });
   };
@@ -642,6 +679,11 @@ export default function App() {
         return newSet;
       });
 
+      notify('New Release', `Your track '${finalTrack.title}' has been uploaded successfully!`);
+      setTimeout(() => {
+        notify('New Like', `Someone liked your new track '${finalTrack.title}'`);
+      }, 5000);
+
       handlePlayTrack(finalTrack, nextTracks);
       handleNavigate('library:uploaded');
     } catch (e: any) {
@@ -680,6 +722,7 @@ export default function App() {
     };
     setUserPlaylists(prev => [...prev, newPlaylist]);
     setIsCreatePlaylistModalOpen(false);
+    notify('Playlist Created', `Playlist '${name}' has been created.`);
   };
 
   const handleCreatePlaylist = (name: string, firstTrack: Track) => {
@@ -691,11 +734,13 @@ export default function App() {
       tracks: [firstTrack]
     };
     setUserPlaylists(prev => [...prev, newPlaylist]);
+    notify('Playlist Created', `Playlist '${name}' has been created.`);
   };
 
   const handleAddToPlaylist = (playlistId: string, track: Track) => {
     setUserPlaylists(prev => prev.map(p => {
       if (p.id === playlistId && !p.tracks.some(t => t.id === track.id)) {
+        notify('Playlist Updated', `Added '${track.title}' to ${p.title}`);
         return { ...p, tracks: [...p.tracks, track], coverUrl: p.coverUrl || track.coverUrl };
       }
       return p;
@@ -1067,8 +1112,7 @@ export default function App() {
               <h3 className="text-sm font-semibold text-zinc-400 mb-3 ml-2">Next Up</h3>
               {queue.slice(currentIndex + 1, currentIndex + 20).map((t, idx) => (
                 <div key={`${t.id}-${idx}`} className="flex items-center gap-3 p-2 rounded-md hover:bg-white/5 cursor-pointer" onClick={() => {
-                  setCurrentIndex(currentIndex + 1 + idx);
-                  setIsPlaying(true);
+                  handlePlayTrack(t, queue);
                 }}>
                   <img src={t.coverUrl} className="w-10 h-10 rounded object-cover" alt="" />
                   <div>

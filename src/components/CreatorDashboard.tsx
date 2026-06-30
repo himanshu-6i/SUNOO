@@ -75,10 +75,15 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
   // Keeping object URLs alive to allow playback in the app
   // Avoid revoking URLs when unmounting if they have been added to the queue
 
+  const userTracks = tracks.filter(t => t.artist === userName);
+  const totalUploads = userTracks.length;
+  const totalStreams = userTracks.reduce((acc, t) => acc + (t.plays || 0), 0);
+  const monthlyListeners = Math.floor(totalStreams * 0.65);
+
   const stats = [
-    { label: 'Total Streams', value: '12.4M', icon: Music, increment: '+12%' },
-    { label: 'Monthly Listeners', value: '840K', icon: Users, increment: '+5%' },
-    { label: 'Estimated Revenue', value: '$45,200', icon: DollarSign, increment: '+18%' }
+    { label: 'Total Streams', value: totalStreams.toLocaleString(), icon: Music, increment: '+12%' },
+    { label: 'Monthly Listeners', value: monthlyListeners.toLocaleString(), icon: Users, increment: '+5%' },
+    { label: 'Total Upload Songs', value: totalUploads.toLocaleString(), icon: FileAudio, increment: '+18%' }
   ];
 
   const processAudioFile = async (file: File) => {
@@ -478,7 +483,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
       {/* Content Management */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-6">Your Recent Releases</h2>
-        {tracks.filter(t => t.artist === userName).length === 0 ? (
+        {userTracks.length === 0 ? (
           <div className="bg-white/5 border border-white/5 rounded-2xl p-12 text-center text-zinc-500">
             <Music className="w-12 h-12 mx-auto mb-4 opacity-20" />
             <p className="text-lg font-medium text-white mb-2">No releases yet</p>
@@ -493,11 +498,11 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
               <span>Streams</span>
               <span>Status</span>
             </div>
-            {tracks.filter(t => t.artist === userName).map((track, i) => (
+            {userTracks.map((track, i) => (
               <div key={i} className="group grid grid-cols-[48px_2fr_1fr_1fr_1fr] gap-4 px-6 py-4 items-center border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                 <div 
                   className="relative w-10 h-10 flex items-center justify-center cursor-pointer group/btn"
-                  onClick={() => onPlay && onPlay(track, tracks.filter(t => t.artist === userName))}
+                  onClick={() => onPlay && onPlay(track, userTracks)}
                 >
                   <div className="w-full h-full rounded bg-violet-500/10 flex items-center justify-center text-violet-400 group-hover/btn:bg-violet-500 group-hover/btn:text-white transition-colors">
                     <Play className="w-4 h-4 fill-current" />
@@ -505,7 +510,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                 </div>
                 <div className="flex items-center gap-4 truncate">
                   <img src={track.coverUrl} className="w-12 h-12 rounded object-cover" alt="" />
-                  <div className="truncate cursor-pointer" onClick={() => onPlay && onPlay(track, tracks.filter(t => t.artist === userName))}>
+                  <div className="truncate cursor-pointer" onClick={() => onPlay && onPlay(track, userTracks)}>
                     <p className="font-semibold text-white truncate group-hover:text-violet-400 transition-colors">{track.title}</p>
                     <p className="text-xs text-zinc-500 truncate">{track.genre}</p>
                   </div>

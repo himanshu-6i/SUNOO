@@ -265,9 +265,9 @@ export function SettingsView({ currentPlan }: SettingsViewProps) {
                   const issue = prompt('Describe the copyright issue:');
                   if (issue) showToast('Report submitted. We will review it shortly.');
                 }} />
-                <SettingButton label="Contact Support" onClick={() => {
-                  const msg = prompt('How can we help you?');
-                  if (msg) showToast('Support ticket opened. Check your email for updates.');
+                <SettingButton label="Contact Support (poojaloth9216@gmail.com)" onClick={() => {
+                  window.location.href = 'mailto:poojaloth9216@gmail.com';
+                  showToast('Opening email client...');
                 }} />
                 <SettingButton label="Terms & Privacy Policy" onClick={() => showToast('Opening legal documents...')} />
               </div>
