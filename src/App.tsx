@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
+import { MobileNav } from './components/MobileNav';
 import { Player } from './components/Player';
 import { TopBar } from './components/TopBar';
 import { HomeFeed } from './components/HomeFeed';
@@ -118,8 +119,26 @@ export default function App() {
       };
     });
   }, [userPlaylists, allTracks]);
-  const [queue, setQueue] = useState<Track[]>(allTracks);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [queue, setQueue] = useState<Track[]>(() => {
+    try {
+      const saved = localStorage.getItem('playerQueue');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return allTracks;
+  });
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    try {
+      const saved = localStorage.getItem('playerCurrentIndex');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return 0;
+  });
   const currentTrack = queue[currentIndex] || null;
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -127,14 +146,28 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState('0:00');
   const [duration, setDuration] = useState('0:00');
   const [volume, setVolume] = useState(0.8);
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(() => {
+    try {
+      return localStorage.getItem('playerShuffle') === 'true';
+    } catch(e) { return false; }
+  });
+  const [isRepeat, setIsRepeat] = useState(() => {
+    try {
+      return localStorage.getItem('playerRepeat') === 'true';
+    } catch(e) { return false; }
+  });
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isEQOpen, setIsEQOpen] = useState(false);
   
   const stateRef = useRef({ queue, currentIndex, isShuffle, isRepeat });
   useEffect(() => {
     stateRef.current = { queue, currentIndex, isShuffle, isRepeat };
+    try {
+      localStorage.setItem('playerQueue', JSON.stringify(queue));
+      localStorage.setItem('playerCurrentIndex', currentIndex.toString());
+      localStorage.setItem('playerShuffle', isShuffle.toString());
+      localStorage.setItem('playerRepeat', isRepeat.toString());
+    } catch (e) {}
   }, [queue, currentIndex, isShuffle, isRepeat]);
   
   // Provide some initial mock liked tracks
@@ -328,19 +361,6 @@ export default function App() {
       setCurrentTime(formatTime(current));
       setDuration(formatTime(total));
       setProgress(total > 0 ? current / total : 0);
-      
-      // Update Media Session position state
-      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && isFinite(total) && total > 0) {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: total,
-            playbackRate: audioRef.current.playbackRate || 1,
-            position: current
-          });
-        } catch (err) {
-          // Ignore errors from setPositionState
-        }
-      }
     }
   };
 
@@ -569,7 +589,7 @@ export default function App() {
 
   if (initError) {
     return (
-      <div className="h-screen w-full bg-black flex flex-col items-center justify-center p-6 text-center text-white">
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center p-6 text-center text-white">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 max-w-lg">
           <h1 className="text-xl font-bold text-red-500 mb-4">Configuration Error</h1>
           <p className="text-zinc-300 mb-6">{initError}</p>
@@ -583,7 +603,7 @@ export default function App() {
 
   if (isAuthLoading) {
     return (
-      <div className="h-screen w-full bg-black flex items-center justify-center">
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="w-8 h-8 flex border-2 border-violet-500 border-r-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -968,12 +988,14 @@ export default function App() {
   const displayDuration = duration === '0:00' || duration === 'NaN:NaN' ? (currentTrack?.duration || '0:00') : duration;
 
   return (
-    <div className="h-screen w-full bg-black text-white flex overflow-hidden selection:bg-violet-500/30">
+    <div className="fixed inset-0 bg-black text-white flex overflow-hidden selection:bg-violet-500/30">
       <audio 
         ref={audioRef} 
         onTimeUpdate={handleTimeUpdate} 
         onLoadedMetadata={handleTimeUpdate}
         onEnded={handleEnded}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onError={(e) => {
           console.warn("Audio element error:", e.currentTarget.error);
           setIsPlaying(false);
@@ -1087,7 +1109,7 @@ export default function App() {
       
       {/* Queue Sidebar */}
       {isQueueOpen && (
-        <div className="absolute top-0 bottom-24 right-0 w-[400px] bg-[#0a0a0a] border-l border-white/5 shadow-2xl z-40 flex flex-col transform transition-transform">
+        <div className="absolute top-0 bottom-[70px] md:bottom-24 right-0 w-full md:w-[400px] bg-[#0a0a0a] md:border-l border-white/5 shadow-2xl z-40 flex flex-col transform transition-transform">
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <h2 className="text-xl font-bold">Play Queue</h2>
             <button onClick={() => setIsQueueOpen(false)} className="text-zinc-400 hover:text-white">
@@ -1148,6 +1170,11 @@ export default function App() {
           </div>
         </div>
       )}
+      <MobileNav 
+        currentView={currentView} 
+        setView={handleNavigate} 
+        onNewPlaylist={() => setIsCreatePlaylistModalOpen(true)}
+      />
     </div>
   );
 }

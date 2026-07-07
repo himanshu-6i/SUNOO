@@ -82,7 +82,7 @@ export function LoginView({ onLogin, onClose }: LoginViewProps) {
   };
 
   return (
-    <div className="h-screen w-full bg-black flex items-center justify-center relative overflow-hidden text-white font-sans selection:bg-violet-500/30">
+    <div className="fixed inset-0 bg-black flex items-center justify-center relative overflow-hidden text-white font-sans selection:bg-violet-500/30">
       {/* Background Effects */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[800px] h-[800px] bg-violet-600/20 rounded-full blur-[120px] -translate-y-1/4 -translate-x-1/4" />

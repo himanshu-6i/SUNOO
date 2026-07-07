@@ -38,7 +38,7 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
   ];
 
   return (
-    <div className="w-[280px] bg-[#0A0A0A] flex flex-col h-full border-r border-[#222] pb-24 overflow-y-auto custom-scrollbar">
+    <div className="hidden md:flex w-[280px] shrink-0 bg-[#0A0A0A] flex-col h-full border-r border-[#222] pb-24 overflow-y-auto custom-scrollbar">
       <div className="p-6">
         <h1 className="text-2xl font-bold tracking-tighter text-white flex items-center gap-3">
           <SunooLogo className="w-8 h-8" />

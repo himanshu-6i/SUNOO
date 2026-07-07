@@ -48,7 +48,7 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
   }, []);
 
   return (
-    <div className="h-20 flex items-center justify-between px-8 bg-[#0a0a0a]/95 backdrop-blur-md sticky top-0 z-40">
+    <div className="h-20 flex items-center justify-between px-4 md:px-8 bg-[#0a0a0a]/95 backdrop-blur-md sticky top-0 z-40">
       <div className="flex items-center gap-4">
         {/* We can hide these or keep them for functionality, the design doesn't show them but they are useful */}
         <button 
@@ -83,7 +83,7 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
         </div>
       </div>
       
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 md:gap-6">
         <button 
           onClick={onOpenAIChat}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-violet-600/20 text-violet-400 hover:bg-violet-600/40 transition-colors shadow-[0_0_15px_rgba(139,92,246,0.3)]"

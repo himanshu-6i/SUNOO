@@ -6,6 +6,19 @@
   --font-display: "Space Grotesk", ui-sans-serif, system-ui;
 }
 
+@layer base {
+  body {
+    background-color: #000000;
+    color: #ffffff;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
 @layer utilities {
   .scrollbar-hide {
     /* IE and Edge */
@@ -32,4 +45,3 @@
     background: #555;
   }
 }
-

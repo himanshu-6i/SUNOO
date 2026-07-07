@@ -66,20 +66,20 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
   };
 
   return (
-    <div className="h-24 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/5 absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 z-50">
+    <div className="h-24 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/5 absolute bottom-[70px] md:bottom-0 left-0 right-0 flex items-center justify-between px-2 md:px-6 z-50 overflow-hidden">
       
       {/* Current Track Info */}
-      <div className="flex items-center gap-4 w-1/4 min-w-[200px]">
+      <div className="flex items-center gap-2 md:gap-4 w-1/2 md:w-1/4 md:min-w-[200px] pr-2">
         <img 
           src={currentTrack.coverUrl} 
           alt={currentTrack.title}
-          className="w-[50px] h-[50px] rounded object-cover shadow-lg"
+          className="w-10 h-10 md:w-[50px] md:h-[50px] rounded object-cover shadow-lg shrink-0"
         />
-        <div className="overflow-hidden">
-          <p className="text-[13px] text-white font-bold truncate hover:underline cursor-pointer tracking-wide">{currentTrack.title}</p>
-          <p className="text-[11px] text-zinc-400 truncate hover:underline cursor-pointer">{currentTrack.artist}</p>
+        <div className="overflow-hidden min-w-0">
+          <p className="text-[12px] md:text-[13px] text-white font-bold truncate hover:underline cursor-pointer tracking-wide">{currentTrack.title}</p>
+          <p className="text-[10px] md:text-[11px] text-zinc-400 truncate hover:underline cursor-pointer">{currentTrack.artist}</p>
         </div>
-        <div className="flex items-center gap-3 ml-2">
+        <div className="hidden md:flex items-center gap-3 ml-2 shrink-0">
           <button onClick={onToggleLike} className="transition-colors focus:outline-none" title="Like">
             <Heart className={`w-[18px] h-[18px] ${isLiked ? 'text-fuchsia-400 fill-current' : 'text-zinc-500 hover:text-white'}`} />
           </button>
@@ -90,37 +90,40 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
       </div>
 
       {/* Main Controls */}
-      <div className="flex flex-col items-center max-w-[600px] w-2/4 gap-2">
-        <div className="flex items-center gap-6">
-          <button onClick={onToggleShuffle} className={`${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
+      <div className="flex flex-col items-center max-w-[600px] w-1/2 md:w-2/4 gap-1 md:gap-2">
+        <div className="flex items-center justify-end md:justify-center gap-2 md:gap-6 w-full">
+          <button onClick={onToggleShuffle} className={`hidden md:block ${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Shuffle className="w-4 h-4" />
           </button>
-          <button onClick={onPrev} className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={onPrev} className="hidden md:block text-zinc-400 hover:text-white transition-colors">
             <SkipBack className="w-5 h-5 fill-current" />
+          </button>
+          <button onClick={onToggleLike} className="md:hidden transition-colors focus:outline-none shrink-0" title="Like">
+            <Heart className={`w-5 h-5 ${isLiked ? 'text-fuchsia-400 fill-current' : 'text-zinc-400 hover:text-white'}`} />
           </button>
           <button 
             onClick={onTogglePlay}
-            className="w-11 h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+            className="w-9 h-9 md:w-11 md:h-11 shrink-0 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_15px_rgba(168,85,247,0.5)]"
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5 text-white fill-current" />
+              <Pause className="w-4 h-4 md:w-5 md:h-5 text-white fill-current" />
             ) : (
-              <Play className="w-5 h-5 text-white fill-current ml-1" />
+              <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-current ml-0.5 md:ml-1" />
             )}
           </button>
-          <button onClick={onNext} className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={onNext} className="text-zinc-400 hover:text-white transition-colors shrink-0">
             <SkipForward className="w-5 h-5 fill-current" />
           </button>
-          <button onClick={onToggleRepeat} className={`${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
+          <button onClick={onToggleRepeat} className={`hidden md:block ${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Repeat className="w-4 h-4" />
           </button>
         </div>
         
         {/* Progress Bar */}
-        <div className="flex items-center gap-4 w-full px-4 text-[11px] text-zinc-400 font-mono tracking-wider font-medium">
-          <span className="w-8 text-right">{currentTime}</span>
-          <div className="flex-1 relative flex items-center h-4 group">
-            <div className="absolute left-0 w-full h-1 bg-[#1a1a1a] rounded overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-1 md:relative md:h-4 md:flex items-center gap-4 md:w-full md:px-4 text-[11px] text-zinc-400 font-mono tracking-wider font-medium">
+          <span className="hidden md:block w-8 text-right">{currentTime}</span>
+          <div className="flex-1 relative flex items-center h-full md:h-4 group w-full">
+            <div className="absolute left-0 w-full h-full md:h-1 bg-[#1a1a1a] rounded-none md:rounded overflow-hidden pointer-events-none">
               <div 
                 className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-colors duration-100"
                 style={{ width: `${progress * 100}%` }}
@@ -128,7 +131,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
             </div>
             {/* The thumb */}
             <div 
-              className="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-sm pointer-events-none transition-opacity"
+              className="hidden md:block absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-sm pointer-events-none transition-opacity"
               style={{ left: `calc(${progress * 100}% - 6px)` }}
             />
             <input 
@@ -141,12 +144,12 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
               className="absolute w-full h-full opacity-0 cursor-pointer m-0"
             />
           </div>
-          <span className="w-8 text-left">{duration}</span>
+          <span className="hidden md:block w-8 text-left">{duration}</span>
         </div>
       </div>
 
       {/* Extra Controls */}
-      <div className="flex items-center justify-end gap-5 w-1/4 min-w-[200px] text-zinc-400">
+      <div className="hidden md:flex items-center justify-end gap-5 w-1/4 min-w-[200px] text-zinc-400">
         <div className="flex items-center gap-2 group w-24">
           <button onClick={() => {
             if (isMuted) {

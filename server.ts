@@ -66,10 +66,24 @@ async function startServer() {
 
     try {
       // Lyria music generation via generateContentStream
-      const response = await ai.models.generateContentStream({
-        model: modelStr,
-        contents: prompt
-      });
+      let response;
+      try {
+        response = await ai.models.generateContentStream({
+          model: modelStr,
+          contents: prompt
+        });
+      } catch (e: any) {
+        if (e?.message?.includes('503') || e?.message?.includes('high demand') || e?.message?.includes('UNAVAILABLE')) {
+          console.log("Retrying Lyria request due to 503 error...");
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          response = await ai.models.generateContentStream({
+            model: modelStr,
+            contents: prompt
+          });
+        } else {
+          throw e;
+        }
+      }
 
       let audioBase64 = "";
       let lyrics = "";
@@ -95,7 +109,9 @@ async function startServer() {
     } catch (e: any) {
       console.error("AI Music Generation err:", e);
       let errorMessage = e?.message || "An unexpected error occurred.";
-      if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+      if (errorMessage.includes('503') || errorMessage.includes('high demand') || errorMessage.includes('UNAVAILABLE')) {
+         errorMessage = "The AI model is currently experiencing high demand. Please try again in a few moments.";
+      } else if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
          errorMessage = "AI service limit reached. Please try again later.";
       }
       res.status(500).json({ error: errorMessage });
@@ -115,15 +131,34 @@ If the user asks about ANYTHING unrelated to the Sunoo app or music, you MUST po
 
 User question: ${prompt}`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: strictPrompt,
-      });
+      let response;
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: strictPrompt,
+        });
+      } catch (e: any) {
+        if (e?.message?.includes('503') || e?.message?.includes('high demand') || e?.message?.includes('UNAVAILABLE')) {
+          console.log("Falling back to gemini-2.5-flash due to 503 error...");
+          response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: strictPrompt,
+          });
+        } else {
+          throw e;
+        }
+      }
 
       res.json({ output: response.text, thoughts: "" });
     } catch (error: any) {
       console.error("Thinking chat err:", error);
-      res.status(500).json({ error: error.message });
+      let errorMessage = error?.message || "An unexpected error occurred.";
+      if (errorMessage.includes('503') || errorMessage.includes('high demand') || errorMessage.includes('UNAVAILABLE')) {
+         errorMessage = "The AI model is currently experiencing high demand. Please try again in a few moments.";
+      } else if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+         errorMessage = "AI service limit reached. Please try again later.";
+      }
+      res.status(500).json({ error: errorMessage });
     }
   });
 

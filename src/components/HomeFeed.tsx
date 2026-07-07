@@ -77,7 +77,7 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
 
   return (
     <div className="flex-1 overflow-y-auto pb-32 bg-[#050505] custom-scrollbar">
-      <div className="p-8 max-w-[1400px] mx-auto space-y-12">
+      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 md:space-y-12">
         {/* Hero Banner */}
         <div className="relative rounded-[2rem] bg-[#0f0f13] border border-white/5 overflow-hidden flex flex-col md:flex-row items-center justify-between shadow-2xl min-h-[400px]">
           <div className="absolute inset-0 bg-gradient-to-r from-[#1a0b2e]/50 to-transparent z-0" />
@@ -85,7 +85,7 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative z-10 p-10 md:p-14 md:pr-0 md:w-[60%] lg:w-[50%]"
+            className="relative z-10 p-6 md:p-14 md:pr-0 md:w-[60%] lg:w-[50%]"
           >
             <div className="flex items-center gap-2 text-fuchsia-400 font-bold text-xs tracking-widest mb-6 uppercase">
               <Sparkles className="w-4 h-4" />
