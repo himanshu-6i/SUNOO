@@ -1,4 +1,4 @@
-import { Home, Search, Library, Crown, PlusSquare } from 'lucide-react';
+import { Home, Search, Library, Crown, PlusSquare, UploadCloud } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface MobileNavProps {
@@ -13,7 +13,7 @@ export function MobileNav({ currentView, setView, onNewPlaylist }: MobileNavProp
     { id: 'search', icon: Search, label: 'Search' },
     { id: 'library', icon: Library, label: 'Your Library' },
     { id: 'premium', icon: Crown, label: 'Premium' },
-    { id: 'new-playlist', icon: PlusSquare, label: 'Create' },
+    { id: 'creator', icon: UploadCloud, label: 'Upload' },
   ];
 
   return (

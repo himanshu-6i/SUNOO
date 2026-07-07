@@ -1,7 +1,8 @@
-import { Search as SearchIcon, Bell, ChevronLeft, ChevronRight, Check, ChevronDown, Bot } from 'lucide-react';
+import { Search as SearchIcon, Bell, ChevronLeft, ChevronRight, Check, ChevronDown, Bot, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { currentUser as mockUser } from '../data';
 import { Notification } from '../types';
+import { SunooLogo } from './SunooLogo';
 
 interface TopBarProps {
   searchQuery: string;
@@ -15,9 +16,10 @@ interface TopBarProps {
   canGoBack?: boolean;
   canGoForward?: boolean;
   onOpenAIChat?: () => void;
+  onMenuClick?: () => void;
 }
 
-export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotificationRead, onLogout, onNavigate, onBack, onForward, canGoBack, canGoForward, onOpenAIChat }: TopBarProps) {
+export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotificationRead, onLogout, onNavigate, onBack, onForward, canGoBack, canGoForward, onOpenAIChat, onMenuClick }: TopBarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -43,6 +45,7 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
         setShowProfileMenu(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -50,6 +53,15 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
   return (
     <div className="h-20 flex items-center justify-between px-4 md:px-8 bg-[#0a0a0a]/95 backdrop-blur-md sticky top-0 z-40">
       <div className="flex items-center gap-4">
+        {/* Mobile Logo */}
+        <button 
+          onClick={onMenuClick}
+          className="flex md:hidden items-center gap-2 text-white font-bold tracking-tighter text-lg hover:opacity-80 transition-opacity"
+        >
+          <SunooLogo className="w-6 h-6" />
+          SUNOO
+        </button>
+
         {/* We can hide these or keep them for functionality, the design doesn't show them but they are useful */}
         <button 
           onClick={onBack}

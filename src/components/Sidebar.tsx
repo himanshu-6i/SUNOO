@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Home, Search, Library, LayoutDashboard, PlusCircle, Heart, Grid, Music, Target, UploadCloud, Compass, Scissors, Crown, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Home, Search, Library, LayoutDashboard, PlusCircle, Heart, Grid, Music, Target, UploadCloud, Compass, Scissors, Crown, Users, X } from 'lucide-react';
 import { ViewState, Artist } from '../types';
 import { SunooLogo } from './SunooLogo';
 
@@ -10,9 +10,11 @@ interface SidebarProps {
   popularArtists?: Artist[];
   onArtistClick?: (artist: Artist) => void;
   onNewPlaylist?: () => void;
+  isMobileOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists = [], onArtistClick, onNewPlaylist }: SidebarProps) {
+export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists = [], onArtistClick, onNewPlaylist, isMobileOpen, onClose }: SidebarProps) {
   const [showAllArtists, setShowAllArtists] = useState(false);
   
   const navItems = [
@@ -37,47 +39,64 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
     { id: 'new-playlist', icon: PlusCircle, label: 'New Playlist', isAction: true },
   ];
 
+  const handleNavClick = (viewId: string) => {
+    setView(viewId);
+    if (onClose) onClose();
+  };
+
   return (
-    <div className="hidden md:flex w-[280px] shrink-0 bg-[#0A0A0A] flex-col h-full border-r border-[#222] pb-24 overflow-y-auto custom-scrollbar">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold tracking-tighter text-white flex items-center gap-3">
-          <SunooLogo className="w-8 h-8" />
-          SUNOO
-        </h1>
-      </div>
-
-      <nav className="flex-1 px-4 space-y-8">
-        <div className="space-y-[2px]">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setView(item.id as ViewState)}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 font-medium relative overflow-hidden ${
-                currentView === item.id 
-                  ? 'bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white' 
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              {currentView === item.id && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-600 to-fuchsia-600 shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
-              )}
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {item.label}
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden" 
+          onClick={onClose}
+        />
+      )}
+      <div className={`fixed inset-y-0 left-0 z-[70] transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out md:flex w-[280px] shrink-0 bg-[#0A0A0A] flex-col h-full border-r border-[#222] pb-24 overflow-y-auto custom-scrollbar`}>
+        <div className="p-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tighter text-white flex items-center gap-3">
+            <SunooLogo className="w-8 h-8" />
+            SUNOO
+          </h1>
+          {isMobileOpen && (
+            <button onClick={onClose} className="text-zinc-400 hover:text-white md:hidden">
+              <X className="w-6 h-6" />
             </button>
-          ))}
+          )}
         </div>
-
-        <div>
-          <p className="px-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-3">AI Tools</p>
+        <nav className="flex-1 px-4 space-y-8">
           <div className="space-y-[2px]">
-             {aiTools.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setView(item.id === 'upload' ? 'creator' : item.id)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 font-medium relative overflow-hidden ${
+                onClick={() => handleNavClick(item.id)}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 font-medium relative overflow-hidden ${
                   currentView === item.id 
                     ? 'bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white' 
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {currentView === item.id && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-600 to-fuchsia-600 shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                )}
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <p className="px-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-3">AI Tools</p>
+            <div className="space-y-[2px]">
+               {aiTools.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id === 'upload' ? 'creator' : item.id)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 font-medium relative overflow-hidden ${
+                    currentView === item.id 
+                      ? 'bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white' 
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {currentView === item.id && (
@@ -165,5 +184,6 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
         </div>
       </nav>
     </div>
+    </>
   );
 }

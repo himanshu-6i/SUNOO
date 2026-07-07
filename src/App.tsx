@@ -31,6 +31,7 @@ import { supabase } from './supabase';
 export default function App() {
   const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState | string>('home');
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
@@ -1011,6 +1012,8 @@ export default function App() {
         popularArtists={dynamicArtists} 
         onArtistClick={handleArtistClick} 
         onNewPlaylist={() => setIsCreatePlaylistModalOpen(true)}
+        isMobileOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
       <main className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden min-w-0">
         <TopBar 
@@ -1025,6 +1028,7 @@ export default function App() {
           canGoBack={historyIndex > 0}
           canGoForward={historyIndex < history.length - 1}
           onOpenAIChat={() => setIsAiChatModalOpen(true)}
+          onMenuClick={() => setIsMobileMenuOpen(true)}
         />
         {renderContent()}
       </main>

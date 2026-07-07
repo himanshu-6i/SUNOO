@@ -95,11 +95,14 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           <button onClick={onToggleShuffle} className={`hidden md:block ${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
             <Shuffle className="w-4 h-4" />
           </button>
-          <button onClick={onPrev} className="hidden md:block text-zinc-400 hover:text-white transition-colors">
-            <SkipBack className="w-5 h-5 fill-current" />
+          <button onClick={onAddToPlaylist} className="md:hidden transition-colors focus:outline-none shrink-0" title="Add to Playlist">
+            <PlusCircle className="w-5 h-5 text-zinc-400 hover:text-white" />
           </button>
           <button onClick={onToggleLike} className="md:hidden transition-colors focus:outline-none shrink-0" title="Like">
             <Heart className={`w-5 h-5 ${isLiked ? 'text-fuchsia-400 fill-current' : 'text-zinc-400 hover:text-white'}`} />
+          </button>
+          <button onClick={onPrev} className="text-zinc-400 hover:text-white transition-colors shrink-0">
+            <SkipBack className="w-5 h-5 fill-current" />
           </button>
           <button 
             onClick={onTogglePlay}
