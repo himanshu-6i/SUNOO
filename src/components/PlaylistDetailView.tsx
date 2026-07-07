@@ -1,3 +1,4 @@
+import { formatPlays } from '../utils';
 import React from 'react';
 import { Play, Pause, Music, ListMusic } from 'lucide-react';
 import { Track, Playlist } from '../types';
@@ -87,7 +88,7 @@ export function PlaylistDetailView({ playlist, onPlay, playingTrackId, isPlaying
                       </div>
                     </div>
                     <div className="text-sm text-zinc-400 truncate">{track.artist}</div>
-                    <div className="text-sm text-zinc-400 text-right font-mono">{track.plays?.toLocaleString() || 0}</div>
+                    <div className="text-sm text-zinc-400 text-right font-mono">{formatPlays(track.plays)}</div>
                   </div>
                 );
               })}

@@ -1,0 +1,3 @@
+const fs = require('fs');
+const file = fs.readFileSync('src/components/Player.tsx', 'utf8');
+// ...

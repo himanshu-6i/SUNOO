@@ -1,3 +1,4 @@
+import { formatPlays } from '../utils';
 import { useState } from 'react';
 import { Play, Sparkles, Clock, Flame, Music, Heart, MoreHorizontal, Info } from 'lucide-react';
 import { Track, Playlist, Artist } from '../types';
@@ -254,7 +255,7 @@ export function HomeFeed({ trending, aiPlaylists, recentlyPlayed, popularArtists
                   <div className="text-[13px] text-zinc-400 font-medium truncate">{track.artist}</div>
                   <div className="text-[13px] text-zinc-400 font-medium">
                     {/* Format plays as millions e.g. 2.1M if over 1M */}
-                    {track.plays > 1000000 ? `${(track.plays / 1000000).toFixed(1)}M` : track.plays > 1000 ? `${(track.plays / 1000).toFixed(1)}K` : track.plays.toLocaleString()}
+                    {formatPlays(track.plays)}
                   </div>
                   <div className="text-[13px] text-zinc-400 font-medium">
                     {track.duration}

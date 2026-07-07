@@ -1,3 +1,4 @@
+import { formatPlays } from '../utils';
 import React, { useState, useRef, useEffect, DragEvent } from 'react';
 import { Upload, BarChart3, Users, DollarSign, Music, CheckCircle2, X, Image as ImageIcon, Music4, Check, Play, FileAudio, AlertTriangle } from 'lucide-react';
 import { currentUser as mockUser, trendingTracks } from '../data';
@@ -81,7 +82,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
   const monthlyListeners = Math.floor(totalStreams * 0.65);
 
   const stats = [
-    { label: 'Total Streams', value: totalStreams.toLocaleString(), icon: Music, increment: '+12%' },
+    { label: 'Total Streams', value: formatPlays(totalStreams), icon: Music, increment: '+12%' },
     { label: 'Monthly Listeners', value: monthlyListeners.toLocaleString(), icon: Users, increment: '+5%' },
     { label: 'Total Upload Songs', value: totalUploads.toLocaleString(), icon: FileAudio, increment: '+18%' }
   ];
@@ -516,7 +517,7 @@ export function CreatorDashboard({ tracks, onTrackUpload, onPlay }: CreatorDashb
                   </div>
                 </div>
                 <div className="text-zinc-400 text-sm">Just now</div>
-                <div className="text-white font-mono text-sm">{track.plays.toLocaleString()}</div>
+                <div className="text-white font-mono text-sm">{formatPlays(track.plays)}</div>
                 <div>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

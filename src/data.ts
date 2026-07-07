@@ -35,6 +35,27 @@ export const initialNotifications: Notification[] = [
 
 export const trendingTracks: Track[] = [
   {
+    id: 't_new1',
+    title: 'Starboy',
+    artist: 'The Weeknd',
+    coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80',
+    duration: '3:50',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
+    genre: 'New Releases',
+    plays: 15000
+  },
+
+  {
+    id: 't_eng1',
+    title: 'Shape of You (Cover)',
+    artist: 'Ed Sheeran (Demo)',
+    coverUrl: 'https://picsum.photos/seed/shapeofyou/300/300',
+    duration: '3:53',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+    genre: 'English',
+    plays: 2000
+  },
+  {
     id: 't1',
     title: 'Echoes of Tomorrow',
     artist: 'AI Genesis',
@@ -42,17 +63,7 @@ export const trendingTracks: Track[] = [
     duration: '3:24',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     genre: 'Electronic',
-    plays: 2100000
-  },
-  {
-    id: 't2',
-    title: 'Midnight Drive',
-    artist: 'Luna Eclipse',
-    coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80',
-    duration: '3:12',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    genre: 'Pop',
-    plays: 1800000
+    plays: 1400
   },
   {
     id: 't3',
@@ -62,7 +73,7 @@ export const trendingTracks: Track[] = [
     duration: '3:45',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
     genre: 'Electronic',
-    plays: 1500000
+    plays: 1000
   },
   {
     id: 't4',
@@ -72,7 +83,7 @@ export const trendingTracks: Track[] = [
     duration: '3:28',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
     genre: 'Pop',
-    plays: 1200000
+    plays: 1200
   },
   {
     id: 't5',
@@ -82,17 +93,15 @@ export const trendingTracks: Track[] = [
     duration: '3:36',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
     genre: 'Pop',
-    plays: 980000
+    plays: 980
   }
 ];
 
 export const popularArtists: Artist[] = [
   { id: 'a1', name: 'AI Genesis', imageUrl: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=300&q=80' },
   { id: 'a2', name: 'The Wanderers', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a3', name: 'Luna Eclipse', imageUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5281b?auto=format&fit=crop&w=300&q=80' },
   { id: 'a4', name: 'Synthwave Specter', imageUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a5', name: 'Metro Flow', imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80' },
-  { id: 'a6', name: 'Digital Karma', imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80' }
+  { id: 'a5', name: 'Metro Flow', imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80' }
 ];
 
 export const aiPlaylists: Playlist[] = [

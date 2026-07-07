@@ -1,3 +1,4 @@
+import { formatPlays } from '../utils';
 import React from 'react';
 import { Play, Pause, Compass, Music, Target } from 'lucide-react';
 import { Track } from '../types';
@@ -106,7 +107,7 @@ export function GenrePlaylistView({ id, title, description, tracks, onPlay, play
                       </div>
                     </div>
                     <div className="text-sm text-zinc-400 truncate">{track.genre}</div>
-                    <div className="text-sm text-zinc-400 text-right font-mono">{track.plays.toLocaleString()}</div>
+                    <div className="text-sm text-zinc-400 text-right font-mono">{formatPlays(track.plays)}</div>
                   </div>
                 );
               })}

@@ -53,7 +53,7 @@ export function Sidebar({ currentView, setView, subscriptionPlan, popularArtists
           onClick={onClose}
         />
       )}
-      <div className={`fixed inset-y-0 left-0 z-[70] transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out md:flex w-[280px] shrink-0 bg-[#0A0A0A] flex-col h-full border-r border-[#222] pb-24 overflow-y-auto custom-scrollbar`}>
+      <div className={`fixed inset-y-0 left-0 z-[70] md:z-0 transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out md:flex w-[280px] shrink-0 bg-[#0A0A0A] flex-col h-full border-r border-[#222] pb-24 overflow-y-auto custom-scrollbar`}>
         <div className="p-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tighter text-white flex items-center gap-3">
             <SunooLogo className="w-8 h-8" />

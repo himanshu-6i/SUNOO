@@ -75,7 +75,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           alt={currentTrack.title}
           className="w-10 h-10 md:w-[50px] md:h-[50px] rounded object-cover shadow-lg shrink-0"
         />
-        <div className="overflow-hidden min-w-0">
+        <div className="overflow-hidden min-w-0 flex-1">
           <p className="text-[12px] md:text-[13px] text-white font-bold truncate hover:underline cursor-pointer tracking-wide">{currentTrack.title}</p>
           <p className="text-[10px] md:text-[11px] text-zinc-400 truncate hover:underline cursor-pointer">{currentTrack.artist}</p>
         </div>
