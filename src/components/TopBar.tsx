@@ -66,14 +66,14 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
         <button 
           onClick={onBack}
           disabled={!canGoBack}
-          className={`w-8 h-8 rounded-full bg-[#111] flex items-center justify-center transition-colors hidden md:flex ${canGoBack ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 cursor-not-allowed'}`}
+          className={`w-8 h-8 rounded-full bg-[#111] items-center justify-center transition-colors ${canGoBack ? 'flex' : 'hidden md:flex'} ${canGoBack ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 cursor-not-allowed'}`}
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button 
           onClick={onForward}
           disabled={!canGoForward}
-          className={`w-8 h-8 rounded-full bg-[#111] flex items-center justify-center transition-colors hidden md:flex ${canGoForward ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 cursor-not-allowed'}`}
+          className={`w-8 h-8 rounded-full bg-[#111] items-center justify-center transition-colors hidden md:flex ${canGoForward ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 cursor-not-allowed'}`}
         >
           <ChevronRight className="w-5 h-5" />
         </button>
