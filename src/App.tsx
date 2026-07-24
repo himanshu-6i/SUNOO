@@ -378,17 +378,22 @@ export default function App() {
       return;
     }
     
-    let nextIndex;
-    if (isShuffle) {
-      nextIndex = Math.floor(Math.random() * queue.length);
-    } else {
-      nextIndex = (currentIndex + 1) % queue.length;
-    }
+    let nextIndex = currentIndex;
+    let nextTrack;
+    let attempts = 0;
+    do {
+      if (isShuffle) {
+        nextIndex = Math.floor(Math.random() * queue.length);
+      } else {
+        nextIndex = (nextIndex + 1) % queue.length;
+      }
+      nextTrack = queue[nextIndex];
+      attempts++;
+    } while (!nextTrack?.audioUrl && attempts < queue.length);
     
-    const nextTrack = queue[nextIndex];
-    if (nextTrack && audioRef.current) {
+    if (nextTrack && nextTrack.audioUrl && audioRef.current) {
       audioRef.current.src = nextTrack.audioUrl;
-      const playPromise = audioRef.current.play();
+            const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
           if (err.name !== 'AbortError') console.warn("Playback prevented:", err.message);
@@ -399,6 +404,7 @@ export default function App() {
 
     setCurrentIndex(nextIndex);
     setIsPlaying(true);
+    stateRef.current.currentIndex = nextIndex;
   };
 
   const playPrev = () => {
@@ -409,17 +415,22 @@ export default function App() {
       return;
     }
     
-    let prevIndex;
-    if (isShuffle) {
-      prevIndex = Math.floor(Math.random() * queue.length);
-    } else {
-      prevIndex = (currentIndex - 1 + queue.length) % queue.length;
-    }
+    let prevIndex = currentIndex;
+    let prevTrack;
+    let attempts = 0;
+    do {
+      if (isShuffle) {
+        prevIndex = Math.floor(Math.random() * queue.length);
+      } else {
+        prevIndex = (prevIndex - 1 + queue.length) % queue.length;
+      }
+      prevTrack = queue[prevIndex];
+      attempts++;
+    } while (!prevTrack?.audioUrl && attempts < queue.length);
     
-    const prevTrack = queue[prevIndex];
-    if (prevTrack && audioRef.current) {
+    if (prevTrack && prevTrack.audioUrl && audioRef.current) {
       audioRef.current.src = prevTrack.audioUrl;
-      const playPromise = audioRef.current.play();
+            const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
           if (err.name !== 'AbortError') console.warn("Playback prevented:", err.message);
@@ -430,6 +441,7 @@ export default function App() {
 
     setCurrentIndex(prevIndex);
     setIsPlaying(true);
+    stateRef.current.currentIndex = prevIndex;
   };
 
   useEffect(() => {
@@ -460,6 +472,7 @@ export default function App() {
     playNextRef.current = playNext;
     playPrevRef.current = playPrev;
   });
+
 
   useEffect(() => {
     if ('mediaSession' in navigator) {
@@ -495,7 +508,7 @@ export default function App() {
     if (audioRef.current) {
       if (loadedTrackIdRef.current !== track.id) {
         audioRef.current.src = track.audioUrl;
-        loadedTrackIdRef.current = track.id;
+                loadedTrackIdRef.current = track.id;
       }
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
@@ -990,11 +1003,12 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 bg-black text-white flex overflow-hidden selection:bg-violet-500/30">
-      <audio 
-        ref={audioRef} 
-        onTimeUpdate={handleTimeUpdate} 
+      <audio
+        ref={audioRef}
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleTimeUpdate}
         onEnded={handleEnded}
+        
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onError={(e) => {
@@ -1016,7 +1030,8 @@ export default function App() {
         onClose={() => setIsMobileMenuOpen(false)}
       />
       <main className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden min-w-0">
-        <TopBar 
+        <TopBar
+          currentView={currentView}
           searchQuery={searchQuery} 
           onSearchChange={handleSearchChange}
           notifications={notifications}
@@ -1108,7 +1123,7 @@ export default function App() {
         />
       )}
       {isAiChatModalOpen && (
-        <AIChatModal onClose={() => setIsAiChatModalOpen(false)} />
+        <AIChatModal onClose={() => setIsAiChatModalOpen(false)} onNavigate={(v) => { handleNavigate(v); setIsAiChatModalOpen(false); }} />
       )}
       
       {/* Queue Sidebar */}

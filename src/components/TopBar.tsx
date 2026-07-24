@@ -5,6 +5,7 @@ import { Notification } from '../types';
 import { SunooLogo } from './SunooLogo';
 
 interface TopBarProps {
+  currentView?: string;
   searchQuery: string;
   onSearchChange: (q: string) => void;
   notifications: Notification[];
@@ -19,11 +20,18 @@ interface TopBarProps {
   onMenuClick?: () => void;
 }
 
-export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotificationRead, onLogout, onNavigate, onBack, onForward, canGoBack, canGoForward, onOpenAIChat, onMenuClick }: TopBarProps) {
+export function TopBar({ currentView, searchQuery, onSearchChange, notifications, onMarkNotificationRead, onLogout, onNavigate, onBack, onForward, canGoBack, canGoForward, onOpenAIChat, onMenuClick }: TopBarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (currentView === 'search' && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [currentView]);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -80,9 +88,10 @@ export function TopBar({ searchQuery, onSearchChange, notifications, onMarkNotif
       </div>
 
       <div className="flex items-center gap-6 ml-auto lg:ml-0 lg:flex-1 lg:max-w-2xl">
-        <div className="relative group w-full mr-4 hidden sm:block">
+        <div className={`relative group w-full mr-4 ${currentView === 'search' ? 'block' : 'hidden sm:block'}`}>
            <SearchIcon className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-white transition-colors" />
-           <input 
+           <input
+             ref={searchInputRef}
              type="text" 
              value={searchQuery}
              onChange={(e) => onSearchChange(e.target.value)}

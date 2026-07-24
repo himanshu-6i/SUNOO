@@ -1,4 +1,6 @@
-import { initializeApp } from 'firebase/app';
+const fs = require('fs');
+
+const firebaseCode = `import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -22,3 +24,6 @@ export const db = firebaseConfig.firestoreDatabaseId
   
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+`;
+
+fs.writeFileSync('src/firebase.ts', firebaseCode);

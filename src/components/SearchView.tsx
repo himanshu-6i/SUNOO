@@ -1,4 +1,4 @@
-import { Play, Music, Clock, X } from 'lucide-react';
+import { Play, Music, Clock, X, Search } from 'lucide-react';
 import { Track } from '../types';
 import React, { useState, useEffect } from 'react';
 import { BROWSE_CATEGORIES } from '../categories';
@@ -48,6 +48,8 @@ export function SearchView({ query, tracks, onPlay, onGenreSelect }: SearchViewP
 
   return (
     <div className="flex-1 overflow-y-auto pb-40 px-4 md:px-8 pt-4 md:pt-8 custom-scrollbar">
+      
+
       <h2 className="text-2xl font-bold text-white mb-6">
         {query ? `Search results for "${query}"` : 'Browse all'}
       </h2>

@@ -1,72 +1,10 @@
-import React, { useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, Mic2, Heart, PlusCircle, Maximize2, ListMusic, SlidersHorizontal, Loader2, ChevronDown } from 'lucide-react';
-import { Track } from '../types';
+const fs = require('fs');
 
-interface PlayerProps {
-  currentTrack: Track | null;
-  isPlaying: boolean;
-  progress: number;
-  currentTime: string;
-  duration: string;
-  volume: number;
-  isLiked: boolean;
-  isShuffle: boolean;
-  isRepeat: boolean;
-  onTogglePlay: () => void;
-  onNext: () => void;
-  onPrev: () => void;
-  onSeek: (percent: number) => void;
-  onVolumeChange: (percent: number) => void;
-  onToggleLike: () => void;
-  onAddToPlaylist?: () => void;
-  onDownload?: (track: Track) => void;
-  onToggleShuffle: () => void;
-  onToggleRepeat: () => void;
-  onToggleQueue?: () => void;
-  onToggleFullscreen?: () => void;
-  onToggleEQ?: () => void;
-}
+let content = fs.readFileSync('src/components/Player.tsx', 'utf8');
 
-export function Player({ currentTrack, isPlaying, progress, currentTime, duration, volume, isLiked, isShuffle, isRepeat, onTogglePlay, onNext, onPrev, onSeek, onVolumeChange, onToggleLike, onAddToPlaylist, onDownload, onToggleShuffle, onToggleRepeat, onToggleQueue, onToggleFullscreen, onToggleEQ }: PlayerProps) {
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+const returnRegex = /return \([\s\S]*?\);\n}/;
 
-  if (!currentTrack) return null;
-
-  const handleDownload = async () => {
-    if (!currentTrack?.audioUrl || isDownloading) return;
-    setIsDownloading(true);
-    try {
-      const response = await fetch(currentTrack.audioUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `${currentTrack.title} - ${currentTrack.artist}.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      if (onDownload) onDownload(currentTrack);
-    } catch (error) {
-      // Fallback for CORS restricted files
-      const a = document.createElement('a');
-      a.href = currentTrack.audioUrl;
-      a.download = `${currentTrack.title} - ${currentTrack.artist}.mp3`;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      if (onDownload) onDownload(currentTrack);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  return (
+const newReturn = `return (
     <>
       {/* Mobile Full Screen Player */}
       {isExpanded && (
@@ -95,14 +33,14 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
                 <PlusCircle className="w-7 h-7 text-zinc-400 hover:text-white" />
               </button>
               <button onClick={(e) => { e.stopPropagation(); onToggleLike(); }} className="transition-colors focus:outline-none">
-                <Heart className={`w-7 h-7 ${isLiked ? 'text-green-500 fill-current' : 'text-zinc-400 hover:text-white'}`} />
+                <Heart className={\`w-7 h-7 \${isLiked ? 'text-green-500 fill-current' : 'text-zinc-400 hover:text-white'}\`} />
               </button>
             </div>
           </div>
 
           <div className="mb-8">
             <div className="relative w-full h-1.5 bg-white/20 rounded-full mb-3 group">
-              <div className="absolute top-0 left-0 h-full bg-white rounded-full transition-all duration-100" style={{ width: `${progress * 100}%` }} />
+              <div className="absolute top-0 left-0 h-full bg-white rounded-full transition-all duration-100" style={{ width: \`\${progress * 100}%\` }} />
               <input 
                 type="range" min="0" max="1" step="0.001" value={progress || 0}
                 onChange={(e) => { e.stopPropagation(); onSeek(parseFloat(e.target.value)); }}
@@ -116,7 +54,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           </div>
 
           <div className="flex items-center justify-between mb-8 px-2">
-            <button onClick={(e) => { e.stopPropagation(); onToggleShuffle(); }} className={`${isShuffle ? 'text-green-500' : 'text-zinc-400'} focus:outline-none`}>
+            <button onClick={(e) => { e.stopPropagation(); onToggleShuffle(); }} className={\`\${isShuffle ? 'text-green-500' : 'text-zinc-400'} focus:outline-none\`}>
               <Shuffle className="w-7 h-7" />
             </button>
             <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white focus:outline-none">
@@ -132,7 +70,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
             <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white focus:outline-none">
               <SkipForward className="w-10 h-10 fill-current" />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onToggleRepeat(); }} className={`${isRepeat ? 'text-green-500' : 'text-zinc-400'} focus:outline-none`}>
+            <button onClick={(e) => { e.stopPropagation(); onToggleRepeat(); }} className={\`\${isRepeat ? 'text-green-500' : 'text-zinc-400'} focus:outline-none\`}>
               <Repeat className="w-7 h-7" />
             </button>
           </div>
@@ -168,7 +106,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
 
       {/* Standard Bottom Player */}
       <div 
-        className={`h-16 md:h-24 bg-[#18181b]/95 md:bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/5 absolute bottom-[70px] md:bottom-0 left-0 right-0 flex items-center justify-between px-2 md:px-6 z-50 overflow-hidden ${isExpanded ? 'hidden md:flex' : ''} rounded-lg mx-2 mb-2 md:m-0 md:rounded-none`}
+        className={\`h-16 md:h-24 bg-[#18181b]/95 md:bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/5 absolute bottom-[70px] md:bottom-0 left-0 right-0 flex items-center justify-between px-2 md:px-6 z-50 overflow-hidden \${isExpanded ? 'hidden md:flex' : ''} rounded-lg mx-2 mb-2 md:m-0 md:rounded-none\`}
         onClick={() => {
           if (window.innerWidth < 768) {
             setIsExpanded(true);
@@ -176,7 +114,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
         }}
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10 md:hidden">
-          <div className="h-full bg-white transition-all duration-100" style={{ width: `${progress * 100}%` }} />
+          <div className="h-full bg-white transition-all duration-100" style={{ width: \`\${progress * 100}%\` }} />
         </div>
         
         {/* Current Track Info */}
@@ -192,7 +130,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
           </div>
           <div className="hidden md:flex items-center gap-3 ml-2 shrink-0">
             <button onClick={(e) => { e.stopPropagation(); onToggleLike(); }} className="transition-colors focus:outline-none" title="Like">
-              <Heart className={`w-[18px] h-[18px] ${isLiked ? 'text-fuchsia-400 fill-current' : 'text-zinc-500 hover:text-white'}`} />
+              <Heart className={\`w-[18px] h-[18px] \${isLiked ? 'text-fuchsia-400 fill-current' : 'text-zinc-500 hover:text-white'}\`} />
             </button>
             <button onClick={(e) => { e.stopPropagation(); onAddToPlaylist?.(); }} className="transition-colors focus:outline-none" title="Add to Playlist">
               <PlusCircle className="w-[18px] h-[18px] text-zinc-500 hover:text-white" />
@@ -203,11 +141,11 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
         {/* Main Controls */}
         <div className="flex flex-col items-center max-w-[600px] w-1/2 md:w-2/4 gap-1 md:gap-2">
           <div className="flex items-center justify-end md:justify-center gap-4 md:gap-6 w-full">
-            <button onClick={(e) => { e.stopPropagation(); onToggleShuffle(); }} className={`hidden md:block ${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
+            <button onClick={(e) => { e.stopPropagation(); onToggleShuffle(); }} className={\`hidden md:block \${isShuffle ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors\`}>
               <Shuffle className="w-4 h-4" />
             </button>
             <button onClick={(e) => { e.stopPropagation(); onToggleLike(); }} className="md:hidden transition-colors focus:outline-none shrink-0" title="Like">
-              <Heart className={`w-6 h-6 ${isLiked ? 'text-green-500 fill-current' : 'text-zinc-400 hover:text-white'}`} />
+              <Heart className={\`w-6 h-6 \${isLiked ? 'text-green-500 fill-current' : 'text-zinc-400 hover:text-white'}\`} />
             </button>
             <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-zinc-400 hover:text-white transition-colors shrink-0 hidden md:block">
               <SkipBack className="w-5 h-5 fill-current" />
@@ -225,7 +163,7 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
             <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-zinc-400 hover:text-white transition-colors shrink-0 hidden md:block">
               <SkipForward className="w-5 h-5 fill-current" />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onToggleRepeat(); }} className={`hidden md:block ${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors`}>
+            <button onClick={(e) => { e.stopPropagation(); onToggleRepeat(); }} className={\`hidden md:block \${isRepeat ? 'text-fuchsia-400' : 'text-zinc-400 hover:text-white'} transition-colors\`}>
               <Repeat className="w-4 h-4" />
             </button>
           </div>
@@ -237,13 +175,13 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
               <div className="absolute left-0 w-full h-1 bg-[#1a1a1a] rounded overflow-hidden pointer-events-none">
                 <div 
                   className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-colors duration-100"
-                  style={{ width: `${progress * 100}%` }}
+                  style={{ width: \`\${progress * 100}%\` }}
                 />
               </div>
               {/* The thumb */}
               <div 
                 className="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-sm pointer-events-none transition-opacity"
-                style={{ left: `calc(${progress * 100}% - 6px)` }}
+                style={{ left: \`calc(\${progress * 100}% - 6px)\` }}
               />
               <input 
                 type="range"
@@ -278,12 +216,12 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
                <div className="absolute left-0 w-full h-1 bg-[#1a1a1a] rounded overflow-hidden pointer-events-none">
                  <div 
                     className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-colors"
-                    style={{ width: `${isMuted ? 0 : volume * 100}%` }}
+                    style={{ width: \`\${isMuted ? 0 : volume * 100}%\` }}
                  />
                </div>
                <div 
                   className="absolute w-2.5 h-2.5 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-sm pointer-events-none"
-                 style={{ left: `calc(${isMuted ? 0 : volume * 100}% - 5px)` }}
+                 style={{ left: \`calc(\${isMuted ? 0 : volume * 100}% - 5px)\` }}
                />
                <input 
                   type="range"
@@ -313,6 +251,8 @@ export function Player({ currentTrack, isPlaying, progress, currentTime, duratio
     </>
   );
 }
+`;
 
+content = content.replace(returnRegex, newReturn);
 
-
+fs.writeFileSync('src/components/Player.tsx', content);

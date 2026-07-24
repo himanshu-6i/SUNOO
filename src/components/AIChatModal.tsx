@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 
 interface AIChatModalProps {
   onClose: () => void;
+  onNavigate?: (view: string) => void;
 }
 
 interface Message {
@@ -14,7 +15,7 @@ interface Message {
   thoughts?: string;
 }
 
-export function AIChatModal({ onClose }: AIChatModalProps) {
+export function AIChatModal({ onClose, onNavigate }: AIChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', role: 'assistant', content: "Hi! I am the Sunoo AI Assistant. Ask me anything about our app's music, artists, genres, or AI music generation! (Please note I can only answer questions related to the Sunoo app)." }
   ]);
@@ -52,6 +53,14 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
         content: data.output,
         thoughts: data.thoughts
       }]);
+      
+      if (data.navigate_to && data.navigate_to.trim() !== '') {
+        setTimeout(() => {
+          if (onNavigate) {
+            onNavigate(data.navigate_to.trim());
+          }
+        }, 1500); // Small delay to let user read the message before navigating
+      }
     } catch (err: any) {
       console.error(err);
       setMessages(prev => [...prev, {

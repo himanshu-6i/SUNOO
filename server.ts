@@ -3,7 +3,7 @@ import path from "path";
 import multer from "multer";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI, Modality, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, Modality, ThinkingLevel, Type } from "@google/genai";
 
 async function startServer() {
   const app = express();
@@ -129,27 +129,61 @@ async function startServer() {
 CRITICAL INSTRUCTION: You MUST ONLY answer questions related to the Sunoo app, its music, artists, genres, playlists, or AI music generation within the app. 
 If the user asks about ANYTHING unrelated to the Sunoo app or music, you MUST politely decline to answer and state that you can only answer questions related to the Sunoo app.
 
+Additionally, if the user asks to navigate to a specific view or open something (like a playlist, home, library, search, upload/creator, premium, profile, etc.), provide the corresponding view name in the 'navigate_to' field. If no navigation is requested, leave 'navigate_to' empty.
+
+Valid views for 'navigate_to': 'home', 'search', 'library', 'creator', 'premium', 'profile', 'settings', 'chill', 'workout', 'focus', 'my-ai'.
+
 User question: ${prompt}`;
 
       let response;
       try {
         response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: strictPrompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                reply: { type: Type.STRING },
+                navigate_to: { type: Type.STRING }
+              },
+              required: ["reply", "navigate_to"]
+            }
+          }
         });
       } catch (e: any) {
         if (e?.message?.includes('503') || e?.message?.includes('high demand') || e?.message?.includes('UNAVAILABLE')) {
-          console.log("Falling back to gemini-2.5-flash due to 503 error...");
+          console.log("Retrying gemini-2.5-flash due to 503 error...");
+          await new Promise(resolve => setTimeout(resolve, 2000));
           response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: strictPrompt,
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  reply: { type: Type.STRING },
+                  navigate_to: { type: Type.STRING }
+                },
+                required: ["reply", "navigate_to"]
+              }
+            }
           });
         } else {
           throw e;
         }
       }
 
-      res.json({ output: response.text, thoughts: "" });
+            const jsonStr = response.text || "{}";
+      let parsed = { reply: "I didn't understand that.", navigate_to: "" };
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch (e) {
+        console.error("Failed to parse JSON", e);
+      }
+      res.json({ output: parsed.reply, navigate_to: parsed.navigate_to, thoughts: "" });
     } catch (error: any) {
       console.error("Thinking chat err:", error);
       let errorMessage = error?.message || "An unexpected error occurred.";
