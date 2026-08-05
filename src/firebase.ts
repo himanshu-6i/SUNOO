@@ -4,17 +4,16 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD2S3NOEfIIbHlqabG2osieE-jCWw2CKts",
-  authDomain: "gen-lang-client-0860021576.firebaseapp.com",
-  databaseURL: "https://gen-lang-client-0860021576-default-rtdb.firebaseio.com",
-  projectId: "gen-lang-client-0860021576",
-  storageBucket: "gen-lang-client-0860021576.appspot.com",
-  messagingSenderId: "82434293809",
-  appId: "1:82434293809:web:7febd1e723fa262979d510",
-  measurementId: "G-K513LVE87D"
+  projectId: "warm-tune-mfbwx",
+  appId: "1:386265328690:web:6ffcb87a507525370ba02b",
+  apiKey: "AIzaSyCcEXbW5sP_xNPXegKGbQVxABm7Ehk4ha0",
+  authDomain: "warm-tune-mfbwx.firebaseapp.com",
+  storageBucket: "warm-tune-mfbwx.firebasestorage.app",
+  messagingSenderId: "386265328690",
+  measurementId: ""
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = getFirestore(app, "ai-studio-a5d100e7-141e-47cf-aa09-8b431f08c85b");
 export const auth = getAuth(app);
 export const storage = getStorage(app);

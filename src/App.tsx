@@ -311,7 +311,7 @@ export default function App() {
           });
         };
         fetchInitial();
-
+        
         unsubscribe = onSnapshot(q, (snapshot) => {
           const fetchedTracks = snapshot.docs.map(doc => ({
             ...doc.data(),
@@ -329,9 +329,7 @@ export default function App() {
         console.error("Failed to fetch tracks", err);
       }
     };
-
     fetchTracks();
-
     return () => {
       if (unsubscribe) unsubscribe();
     };
@@ -523,23 +521,12 @@ export default function App() {
       return [track, ...filtered].slice(0, 10);
     });
 
-    if (track.createdAt || !track.id.startsWith('t')) { 
+    if (track.createdAt || !track.id.startsWith('t')) { // Ensure it's likely a firestore document
       try {
-        // Increment plays in Supabase
-        const { data: currentData, error: fetchError } = await supabase
-          .from('tracks')
-          .select('plays')
-          .eq('id', track.id)
-          .single();
-          
-        if (!fetchError && currentData) {
-          await supabase
-            .from('tracks')
-            .update({ plays: (currentData.plays || 0) + 1 })
-            .eq('id', track.id);
-        }
+        const trackRef = doc(db, 'tracks', track.id);
+        await updateDoc(trackRef, { plays: increment(1) });
       } catch (err) {
-        console.error("Failed to increment plays in Supabase", err);
+        console.error("Failed to increment plays in Firestore", err);
       }
     }
   };
@@ -712,10 +699,7 @@ export default function App() {
         createdAt: new Date().toISOString()
       };
       
-      const { error: insertError } = await supabase.from('tracks').insert([dbTrack]);
-      if (insertError) {
-         throw new Error(`Failed to save track in Supabase Database: ${insertError.message}`);
-      }
+      await setDoc(doc(db, 'tracks', trackId), dbTrack);
       
       const finalTrack = { ...newTrack, id: trackId, audioUrl: audioDownloadUrl || '', coverUrl: coverDownloadUrl || '', ownerId: userId, visibility: 'public' as const };
       
@@ -879,7 +863,7 @@ export default function App() {
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      await supabase.from('tracks').delete().eq('id', trackId);
+      await deleteDoc(doc(db, 'tracks', trackId));
       
       setAllTracks(prev => prev.filter(t => t.id !== trackId));
       
