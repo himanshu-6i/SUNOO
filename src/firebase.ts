@@ -13,6 +13,7 @@ if (firebaseConfig.storageBucket && firebaseConfig.storageBucket.includes('.fire
 }
 
 const app = initializeApp(firebaseConfig);
+
 export const db = firebaseConfig.firestoreDatabaseId 
   ? getFirestore(app, firebaseConfig.firestoreDatabaseId) 
   : getFirestore(app);
