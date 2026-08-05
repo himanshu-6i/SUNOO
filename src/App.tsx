@@ -523,12 +523,23 @@ export default function App() {
       return [track, ...filtered].slice(0, 10);
     });
 
-    if (track.createdAt || !track.id.startsWith('t')) { // Ensure it's likely a firestore document
+    if (track.createdAt || !track.id.startsWith('t')) { 
       try {
-        const trackRef = doc(db, 'tracks', track.id);
-        await updateDoc(trackRef, { plays: increment(1) });
+        // Increment plays in Supabase
+        const { data: currentData, error: fetchError } = await supabase
+          .from('tracks')
+          .select('plays')
+          .eq('id', track.id)
+          .single();
+          
+        if (!fetchError && currentData) {
+          await supabase
+            .from('tracks')
+            .update({ plays: (currentData.plays || 0) + 1 })
+            .eq('id', track.id);
+        }
       } catch (err) {
-        console.error("Failed to increment plays in Firestore", err);
+        console.error("Failed to increment plays in Supabase", err);
       }
     }
   };
@@ -688,6 +699,7 @@ export default function App() {
       }
       
       const dbTrack = {
+        id: trackId,
         title: newTrack.title,
         artist: newTrack.artist,
         coverUrl: coverDownloadUrl || '',
@@ -700,7 +712,10 @@ export default function App() {
         createdAt: new Date().toISOString()
       };
       
-      await setDoc(doc(db, 'tracks', trackId), dbTrack);
+      const { error: insertError } = await supabase.from('tracks').insert([dbTrack]);
+      if (insertError) {
+         throw new Error(`Failed to save track in Supabase Database: ${insertError.message}`);
+      }
       
       const finalTrack = { ...newTrack, id: trackId, audioUrl: audioDownloadUrl || '', coverUrl: coverDownloadUrl || '', ownerId: userId, visibility: 'public' as const };
       
@@ -864,7 +879,7 @@ export default function App() {
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      await deleteDoc(doc(db, 'tracks', trackId));
+      await supabase.from('tracks').delete().eq('id', trackId);
       
       setAllTracks(prev => prev.filter(t => t.id !== trackId));
       
